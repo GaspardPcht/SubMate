@@ -1,16 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, FlatList } from 'react-native';
-import { Text, Card, FAB } from 'react-native-paper';
+import { Text, FAB } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MainTabParamList } from '../types';
+import SubscriptionCard from '../components/SubscriptionCard';
 
 type HomeScreenProps = {
   navigation: NativeStackNavigationProp<MainTabParamList, 'Home'>;
 };
 
 interface Subscription {
-  id: string;
+  _id: string;
   name: string;
   price: number;
   billingCycle: string;
@@ -21,25 +22,16 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const [loading, setLoading] = useState<boolean>(true);
 
   const loadSubscriptions = async (): Promise<void> => {
-    // TODO: Implémenter la logique de chargement des abonnements avec le backend
-    // Pour l'instant, on utilise des données de test
-    const mockSubscriptions: Subscription[] = [
-      {
-        id: '1',
-        name: 'Netflix',
-        price: 15.99,
-        billingCycle: 'Mensuel',
-      },
-      {
-        id: '2',
-        name: 'Spotify',
-        price: 9.99,
-        billingCycle: 'Mensuel',
-      },
-    ];
+    const response = await fetch('http://localhost:3000/subs');
+    const data = await response.json();
+    if (data.result) {
+      setSubscriptions(data.subs);
+    } else {
+      console.log(data.error);
+    }
 
     setTimeout(() => {
-      setSubscriptions(mockSubscriptions);
+      setSubscriptions(data.subs);
       setLoading(false);
     }, 1000);
   };
@@ -48,13 +40,23 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     loadSubscriptions();
   }, []);
 
+  const handleDelete = async (_id: string) => {
+    const response = await fetch(`http://localhost:3000/subs/delete/${_id}`, {
+      method: 'DELETE',
+    });
+    const data = await response.json();
+    if (data.result) {
+      setSubscriptions(data.subs);
+    } else {
+      console.log(data.error);
+    }
+  };
+
   const renderSubscription = ({ item }: { item: Subscription }) => (
-    <Card style={styles.card}>
-      <Card.Content>
-        <Text style={styles.subscriptionName}>{item.name}</Text>
-        <Text style={styles.subscriptionPrice}>{item.price}€ / {item.billingCycle}</Text>
-      </Card.Content>
-    </Card>
+    <SubscriptionCard
+      subscription={item}
+      onDelete={handleDelete}
+    />
   );
 
   return (
@@ -64,7 +66,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         <FlatList
           data={subscriptions}
           renderItem={renderSubscription}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item) => item._id}
           contentContainerStyle={styles.list}
         />
       </View>
@@ -94,18 +96,6 @@ const styles = StyleSheet.create({
   list: {
     paddingBottom: 20,
   },
-  card: {
-    marginBottom: 15,
-  },
-  subscriptionName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  subscriptionPrice: {
-    fontSize: 16,
-    color: '#666',
-    marginTop: 5,
-  },
   fab: {
     position: 'absolute',
     margin: 16,
@@ -114,4 +104,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default HomeScreen; 
+export default HomeScreen;

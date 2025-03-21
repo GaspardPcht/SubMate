@@ -4,13 +4,15 @@ import { TextInput, Button, Text } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types';
-
+import { Image } from 'react-native';
+import { Toast, ALERT_TYPE } from 'react-native-alert-notification';
 type RegisterScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Register'>;
 };
 
 const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
-  const [name, setName] = useState<string>('');
+  const [lastname, setLastname] = useState<string>('');
+  const [firstname, setFirstname] = useState<string>('');
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [confirmPassword, setConfirmPassword] = useState<string>('');
@@ -22,13 +24,25 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
       return;
     }
 
-    setLoading(true);
-    // TODO: Implémenter la logique d'inscription avec le backend
-    // Pour l'instant, on simule une inscription réussie
-    setTimeout(() => {
+    const response = await fetch('http://localhost:3000/users/signup', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ lastname, firstname, email, password }),
+    });
+    const data = await response.json();
+    console.log(data)
+    if (data.result) {
       navigation.replace('MainApp');
-      setLoading(false);
-    }, 1000);
+    } else {
+      Toast.show({
+        type: ALERT_TYPE.DANGER,
+        title: 'Erreur',
+        textBody: data.error
+      });
+    }
+    setLoading(false);
   };
 
   return (
@@ -39,13 +53,22 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
       >
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <View style={styles.content}>
+            <Image source={require('../../assets/Logo/SubMate_logo.png')} style={styles.logo} />
             <Text style={styles.title}>Créer un compte</Text>
             <Text style={styles.subtitle}>Rejoignez SubMate pour gérer vos abonnements</Text>
 
             <TextInput
               label="Nom"
-              value={name}
-              onChangeText={setName}
+              value={lastname}
+              onChangeText={setLastname}
+              mode="outlined"
+              style={styles.input}
+            />
+
+            <TextInput
+              label="Prénom"
+              value={firstname}
+              onChangeText={setFirstname}
               mode="outlined"
               style={styles.input}
             />
@@ -134,6 +157,11 @@ const styles = StyleSheet.create({
   },
   button: {
     marginTop: 10,
+  },
+  logo: {
+    width: 200,
+    height: 200,
+    alignSelf: 'center',
   },
 });
 

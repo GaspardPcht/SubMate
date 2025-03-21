@@ -12,8 +12,8 @@ type LoginScreenProps = {
 };
 
 const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
-  const [email, setEmail] = useState<string>('');
-  const [password, setPassword] = useState<string>('');
+  const [email, setEmail] = useState<string>('g@g.com');
+  const [password, setPassword] = useState<string>('g');
   const [loading, setLoading] = useState<boolean>(false);
 
   const handleLogin = async (): Promise<void> => {
