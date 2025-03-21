@@ -120,11 +120,10 @@ const BudgetScreen: React.FC = () => {
                   <View style={styles.pieContainer}>
                     <PieChart
                       data={chartData}
-                      width={Dimensions.get('window').width * 0.55}
-                      height={240}
+                      width={Dimensions.get('window').width * 0.5}
+                      height={160}
                       chartConfig={{
                         color: (opacity = 1) => `rgba(55, 122, 242, ${opacity})`,
-                      
                         barPercentage: 0.7,
                         useShadowColorFromDataset: false,
                         decimalPlaces: 0,
@@ -135,7 +134,7 @@ const BudgetScreen: React.FC = () => {
                       paddingLeft="0"
                       absolute
                       hasLegend={false}
-                      center={[Dimensions.get('window').width * 0.12, 100]}
+                      center={[Dimensions.get('window').width * 0.12, 0]}
                       avoidFalseZero={true}
                     />
                   </View>
@@ -238,21 +237,20 @@ const styles = StyleSheet.create({
   chartContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: 260,
+    minHeight: 200,
   },
   chartWrapper: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     justifyContent: 'space-between',
     width: '100%',
     paddingHorizontal: 8,
   },
   pieContainer: {
-    flex: 1.4,
-    alignItems: 'flex-start',
+    flex: 1.2,
+    alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 16,
-    height: 260,
+    height: 160,
   },
   legendContainer: {
     flex: 1,
@@ -260,8 +258,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(55, 122, 242, 0.2)',
     padding: 12,
-    marginRight: 8,
-    alignSelf: 'flex-start',
+    marginLeft: 16,
+    alignSelf: 'center',
     borderRadius: 12,
   },
   legendItem: {
@@ -307,6 +305,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
     marginTop: 4,
+  },
+  camenbert: {
+    flex: 1,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'red',
   },
 });
 
