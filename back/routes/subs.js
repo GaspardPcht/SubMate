@@ -4,60 +4,58 @@ const Sub = require('../models/sub');
 const User = require('../models/user');
 
 // Récupérer tous les abonnements d'un utilisateur
-router.get('/:userId', (req, res) => {
-  const userId = req.params.userId;
-  User.findById(userId)
-    .populate('subscriptions')
-    .then(user => {
-      if (!user) {
-        return res.json({result: false, error: 'Utilisateur non trouvé'});
-      }
-      res.json({result: true, subs: user.subscriptions});
-    });
-}); 
+router.get('/user/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const user = await User.findById(userId).populate('subscriptions');
+    
+    if (!user) {
+      return res.json({ result: false, error: 'Utilisateur non trouvé' });
+    }
+    
+    res.json({ result: true, subs: user.subscriptions });
+  } catch (error) {
+    console.error('Erreur:', error);
+    res.json({ result: false, error: 'Erreur lors de la récupération des abonnements' });
+  }
+});
 
 // Créer un nouvel abonnement
-router.post('/create', (req, res) => {
-  const { name, price, billingCycle, userId } = req.body;
-  
-  if (!name || !price || !billingCycle || !userId) {
-    return res.json({result: false, error: 'Tous les champs sont requis'});
-  }
+router.post('/create', async (req, res) => {
+  try {
+    const { name, price, billingCycle, nextBillingDate, userId } = req.body;
+    
+    if (!name || !price || !billingCycle || !userId) {
+      return res.json({ result: false, error: 'Tous les champs sont requis' });
+    }
 
-  User.findById(userId)
-    .populate('subscriptions')
-    .then(user => {
-      if (!user) {
-        return res.json({ result: false, error: 'Utilisateur non trouvé' });
-      }
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.json({ result: false, error: 'Utilisateur non trouvé' });
+    }
 
-      // Vérifier si l'abonnement existe déjà pour cet utilisateur
-      const existingSub = user.subscriptions.find(sub => sub.name.toLowerCase() === name.toLowerCase());
-      if (existingSub) {
-        return res.json({ result: false, error: 'Un abonnement avec ce nom existe déjà' });
-      }
-      
-      // Créer le nouvel abonnement
-      const subscription = new Sub({ 
-        name, 
-        price, 
-        billingCycle,
-      });
-      
-      // Sauvegarder l'abonnement et l'ajouter à l'utilisateur
-      subscription.save().then(newSub => {
-        user.subscriptions.push(newSub._id);
-        user.save().then(() => {
-          res.json({result: true, sub: newSub});
-        });
-      });
+    const subscription = new Sub({ 
+      name, 
+      price: Number(price), 
+      billingCycle,
+      nextBillingDate,
+      userId
     });
-}); 
+    
+    const newSub = await subscription.save();
+    user.subscriptions.push(newSub._id);
+    await user.save();
+    
+    res.json({ result: true, sub: newSub });
+  } catch (error) {
+    console.error('Erreur:', error);
+    res.json({ result: false, error: 'Erreur lors de la création de l\'abonnement' });
+  }
+});
 
 // Supprimer un abonnement
 router.delete('/delete/:id/:userId', (req, res) => {
-  const { id } = req.params;
-  const { userId } = req.params;
+  const { id, userId } = req.params;
 
   if (!id || !userId) {
     return res.json({result: false, error: 'L\'ID de l\'abonnement et de l\'utilisateur sont requis'});

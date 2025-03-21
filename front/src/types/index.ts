@@ -7,11 +7,12 @@ export interface User {
 }
 
 export interface Subscription {
-  id: string;
+  _id: string;
   name: string;
   price: number;
   billingCycle: 'monthly' | 'yearly';
   nextBillingDate: string;
+  userId: string;
 }
 
 export interface AuthState {

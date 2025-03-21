@@ -5,7 +5,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { MainTabParamList, Subscription } from '../types';
-import { AlertNotificationRoot } from 'react-native-alert-notification';
+import { AlertNotificationRoot, Toast, ALERT_TYPE } from 'react-native-alert-notification';
+import { useStore } from '@nanostores/react';
+import { $user } from '../store/userStore';
+import { addSubscription } from '../store/subscriptionStore';
+
 type AddSubscriptionScreenProps = {
   navigation: BottomTabNavigationProp<MainTabParamList, 'Add'>;
 };
@@ -17,7 +21,7 @@ const AddSubscriptionScreen: React.FC<AddSubscriptionScreenProps> = ({ navigatio
   const [nextBillingDate, setNextBillingDate] = useState<Date>(new Date());
   const [showDatePicker, setShowDatePicker] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
-
+  const user = useStore($user);
 
   const handleDateChange = (event: any, selectedDate?: Date): void => {
     setShowDatePicker(false);
@@ -27,27 +31,56 @@ const AddSubscriptionScreen: React.FC<AddSubscriptionScreenProps> = ({ navigatio
   };
 
   const handleSubmit = async (): Promise<void> => {
-    setLoading(true);
-    const response = await fetch('http://localhost:3000/subs/create', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ name, price, billingCycle }),
-    });
-    const data = await response.json();
-    if (data.result) {
-      navigation.navigate('Home');
-    } else {
-      <AlertNotificationRoot>
-          title="Erreur"
-          textBody={data.error}
-          type="danger"
-      </AlertNotificationRoot>
+    if (!user?._id) {
+      Toast.show({
+        type: ALERT_TYPE.DANGER,
+        title: 'Erreur',
+        textBody: 'Vous devez être connecté pour ajouter un abonnement'
+      });
+      return;
     }
-    setTimeout(() => {
+
+    setLoading(true);
+    try {
+      const response = await fetch('http://localhost:3000/subs/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name,
+          price: Number(price),
+          billingCycle,
+          nextBillingDate: nextBillingDate.toISOString(),
+          userId: user._id
+        }),
+      });
+      
+      const data = await response.json();
+      if (data.result) {
+        addSubscription(data.sub);
+        Toast.show({
+          type: ALERT_TYPE.SUCCESS,
+          title: 'Succès',
+          textBody: 'Abonnement ajouté avec succès'
+        });
+        navigation.navigate('Home');
+      } else {
+        Toast.show({
+          type: ALERT_TYPE.DANGER,
+          title: 'Erreur',
+          textBody: data.error
+        });
+      }
+    } catch (error) {
+      Toast.show({
+        type: ALERT_TYPE.DANGER,
+        title: 'Erreur',
+        textBody: 'Une erreur est survenue lors de l\'ajout de l\'abonnement'
+      });
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
   };
 
   return (
