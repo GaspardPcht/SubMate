@@ -56,9 +56,9 @@ router.post('/create', (req, res) => {
 }); 
 
 // Supprimer un abonnement
-router.delete('/delete/:id', (req, res) => {
+router.delete('/delete/:id/:userId', (req, res) => {
   const { id } = req.params;
-  const { userId } = req.body;
+  const { userId } = req.params;
 
   if (!id || !userId) {
     return res.json({result: false, error: 'L\'ID de l\'abonnement et de l\'utilisateur sont requis'});
