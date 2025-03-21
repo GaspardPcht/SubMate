@@ -3,14 +3,12 @@ import { View, StyleSheet, ScrollView } from 'react-native';
 import { TextInput, Button, Text } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { MainTabParamList } from '../types';
-import { useStore } from '@nanostores/react';
+import { RootStackParamList } from '../types';
+import { useAppSelector } from '../redux/hooks';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { $user } from '../store/userStore';
-
 
 type AddScreenProps = {
-  navigation: NativeStackNavigationProp<MainTabParamList, 'Add'>;
+  navigation: NativeStackNavigationProp<RootStackParamList, 'Add'>;
 };
 
 const AddScreen: React.FC<AddScreenProps> = ({ navigation }) => {
@@ -20,7 +18,7 @@ const AddScreen: React.FC<AddScreenProps> = ({ navigation }) => {
   const [nextBillingDate, setNextBillingDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [loading, setLoading] = useState(false);
-  const user = useStore($user);
+  const { user } = useAppSelector((state) => state.auth);
 
   const handleSubmit = async () => {
     if (!user?._id) return;
@@ -42,7 +40,7 @@ const AddScreen: React.FC<AddScreenProps> = ({ navigation }) => {
 
     const data = await response.json();
     if (data.result) {
-      navigation.navigate('Home');
+      navigation.getParent()?.navigate('MainTabs', { screen: 'Home' });
     }
     setLoading(false);
   };
