@@ -46,7 +46,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
 
 
   const handleDelete = async (_id: string) => {
-    const response = await fetch(`http://localhost:3000/subs/delete/${_id}`, {
+    const response = await fetch(`http://localhost:3000/subs/delete/${_id}/${user?._id}`, {
       method: 'DELETE',
     });
     const data = await response.json();
