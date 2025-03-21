@@ -9,6 +9,8 @@
     "web": "expo start --web"
   },
   "dependencies": {
+    "@nanostores/persistent": "^0.10.2",
+    "@nanostores/react": "^0.8.4",
     "@react-native-async-storage/async-storage": "^2.1.2",
     "@react-native-community/datetimepicker": "^8.3.0",
     "@react-navigation/bottom-tabs": "^7.3.1",
@@ -17,6 +19,7 @@
     "axios": "^1.8.4",
     "expo": "~52.0.40",
     "expo-status-bar": "~2.0.1",
+    "nanostores": "^0.11.4",
     "react": "18.3.1",
     "react-native": "0.76.7",
     "react-native-alert-notification": "^0.4.2",

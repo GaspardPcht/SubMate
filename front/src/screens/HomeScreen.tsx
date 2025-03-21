@@ -5,6 +5,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MainTabParamList } from '../types';
 import SubscriptionCard from '../components/SubscriptionCard';
+import { $user } from '../store/userStore';
+import { useStore } from '@nanostores/react';
 
 type HomeScreenProps = {
   navigation: NativeStackNavigationProp<MainTabParamList, 'Home'>;
@@ -14,19 +16,21 @@ interface Subscription {
   _id: string;
   name: string;
   price: number;
-  billingCycle: string;
+  billingCycle: string;     
 }
 
 const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const user = useStore($user);
+
 
   useEffect(() => {
     loadSubscriptions();
   }, []);
 
   const loadSubscriptions = async (): Promise<void> => {
-    const response = await fetch('http://localhost:3000/subs');
+    const response = await fetch(`http://localhost:3000/subs/${user?._id}`);
     const data = await response.json();
     if (data.result) {
       setSubscriptions(data.subs);

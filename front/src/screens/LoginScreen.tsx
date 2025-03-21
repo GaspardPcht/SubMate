@@ -6,6 +6,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types';
 import { Image } from 'react-native';
 import { AlertNotificationRoot, Toast, ALERT_TYPE } from 'react-native-alert-notification';
+import { setUser } from '../store/userStore';
 
 type LoginScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Login'>;
@@ -26,8 +27,10 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
       body: JSON.stringify({ email, password }),
     });
     const data = await response.json();
-    console.log(data);
     if (data.result) {
+      setUser({
+        _id: data.user._id,
+      });
       navigation.replace('MainApp');
     } else {
       Toast.show({
