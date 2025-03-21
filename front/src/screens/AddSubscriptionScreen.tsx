@@ -13,11 +13,15 @@ type AddSubscriptionScreenProps = {
   navigation: BottomTabNavigationProp<MainTabParamList, 'Add'>;
 };
 
+const initialState = {
+  name: '',
+  price: '',
+  billingCycle: 'monthly' as 'monthly' | 'yearly',
+  nextBillingDate: new Date(),
+};
+
 const AddSubscriptionScreen: React.FC<AddSubscriptionScreenProps> = ({ navigation }) => {
-  const [name, setName] = useState<string>('');
-  const [price, setPrice] = useState<string>('');
-  const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
-  const [nextBillingDate, setNextBillingDate] = useState<Date>(new Date());
+  const [formState, setFormState] = useState(initialState);
   const [showDatePicker, setShowDatePicker] = useState<boolean>(false);
 
   const dispatch = useAppDispatch();
@@ -27,8 +31,12 @@ const AddSubscriptionScreen: React.FC<AddSubscriptionScreenProps> = ({ navigatio
   const handleDateChange = (event: any, selectedDate?: Date): void => {
     setShowDatePicker(false);
     if (selectedDate) {
-      setNextBillingDate(selectedDate);
+      setFormState(prev => ({ ...prev, nextBillingDate: selectedDate }));
     }
+  };
+
+  const resetForm = () => {
+    setFormState(initialState);
   };
 
   const handleSubmit = async (): Promise<void> => {
@@ -43,10 +51,10 @@ const AddSubscriptionScreen: React.FC<AddSubscriptionScreenProps> = ({ navigatio
 
     try {
       await dispatch(addSubscription({
-        name,
-        price: Number(price),
-        billingCycle,
-        nextBillingDate: nextBillingDate.toISOString(),
+        name: formState.name,
+        price: Number(formState.price),
+        billingCycle: formState.billingCycle,
+        nextBillingDate: formState.nextBillingDate.toISOString(),
         userId: user._id
       })).unwrap();
 
@@ -55,6 +63,7 @@ const AddSubscriptionScreen: React.FC<AddSubscriptionScreenProps> = ({ navigatio
         title: 'Succès',
         textBody: 'Abonnement ajouté avec succès'
       });
+      resetForm();
       navigation.navigate('Home');
     } catch (error) {
       Toast.show({
@@ -73,16 +82,16 @@ const AddSubscriptionScreen: React.FC<AddSubscriptionScreenProps> = ({ navigatio
 
           <TextInput
             label="Nom de l'abonnement"
-            value={name}
-            onChangeText={setName}
+            value={formState.name}
+            onChangeText={(value) => setFormState(prev => ({ ...prev, name: value }))}
             mode="outlined"
             style={styles.input}
           />
 
           <TextInput
             label="Prix"
-            value={price}
-            onChangeText={setPrice}
+            value={formState.price}
+            onChangeText={(value) => setFormState(prev => ({ ...prev, price: value }))}
             mode="outlined"
             style={styles.input}
             keyboardType="decimal-pad"
@@ -90,8 +99,8 @@ const AddSubscriptionScreen: React.FC<AddSubscriptionScreenProps> = ({ navigatio
 
           <Text style={styles.label}>Fréquence de facturation</Text>
           <SegmentedButtons
-            value={billingCycle}
-            onValueChange={(value) => setBillingCycle(value as 'monthly' | 'yearly')}
+            value={formState.billingCycle}
+            onValueChange={(value) => setFormState(prev => ({ ...prev, billingCycle: value as 'monthly' | 'yearly' }))}
             buttons={[
               { value: 'monthly', label: 'Mensuel' },
               { value: 'yearly', label: 'Annuel' },
@@ -105,12 +114,12 @@ const AddSubscriptionScreen: React.FC<AddSubscriptionScreenProps> = ({ navigatio
             onPress={() => setShowDatePicker(true)}
             style={styles.dateButton}
           >
-            {nextBillingDate.toLocaleDateString()}
+            {formState.nextBillingDate.toLocaleDateString()}
           </Button>
 
           {showDatePicker && (
             <DateTimePicker
-              value={nextBillingDate}
+              value={formState.nextBillingDate}
               mode="date"
               display="default"
               onChange={handleDateChange}
@@ -122,7 +131,7 @@ const AddSubscriptionScreen: React.FC<AddSubscriptionScreenProps> = ({ navigatio
             onPress={handleSubmit}
             style={styles.submitButton}
             loading={loading}
-            disabled={!name || !price}
+            disabled={!formState.name || !formState.price}
           >
             Ajouter
           </Button>

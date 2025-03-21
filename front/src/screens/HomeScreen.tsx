@@ -1,12 +1,18 @@
 import React, { useEffect, useCallback } from 'react';
 import { View, StyleSheet, FlatList } from 'react-native';
-import { Text } from 'react-native-paper';
+import { Text, FAB } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAppDispatch, useAppSelector } from '../redux/hooks';
 import { fetchSubscriptions } from '../redux/slices/subscriptionSlice';
 import SubscriptionCard from '../components/SubscriptionCard';
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import { MainTabParamList } from '../types';
 
-const HomeScreen = () => {
+type HomeScreenProps = {
+  navigation: BottomTabNavigationProp<MainTabParamList, 'Home'>;
+};
+
+const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
   const { subscriptions, loading } = useAppSelector((state) => state.subscriptions);
@@ -38,6 +44,11 @@ const HomeScreen = () => {
           refreshing={loading}
           onRefresh={loadSubscriptions}
         />
+        <FAB
+          icon="plus"
+          style={styles.fab}
+          onPress={() => navigation.navigate('Add')}
+        />
       </View>
     </SafeAreaView>
   );
@@ -59,6 +70,13 @@ const styles = StyleSheet.create({
   },
   list: {
     paddingBottom: 20,
+  },
+  fab: {
+    position: 'absolute',
+    margin: 16,
+    right: 0,
+    bottom: 0,
+    backgroundColor: '#377AF2',
   },
 });
 
