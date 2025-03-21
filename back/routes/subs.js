@@ -18,7 +18,7 @@ router.get('/:userId', (req, res) => {
 
 // Créer un nouvel abonnement
 router.post('/create', (req, res) => {
-  const { name, price, billingCycle, nextBillingDate, userId } = req.body;
+  const { name, price, billingCycle, userId } = req.body;
   
   if (!name || !price || !billingCycle || !userId) {
     return res.json({result: false, error: 'Tous les champs sont requis'});
@@ -42,7 +42,6 @@ router.post('/create', (req, res) => {
         name, 
         price, 
         billingCycle,
-        nextBillingDate
       });
       
       // Sauvegarder l'abonnement et l'ajouter à l'utilisateur

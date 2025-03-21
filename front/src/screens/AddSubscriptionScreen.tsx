@@ -33,7 +33,7 @@ const AddSubscriptionScreen: React.FC<AddSubscriptionScreenProps> = ({ navigatio
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ name, price, billingCycle, nextBillingDate }),
+      body: JSON.stringify({ name, price, billingCycle }),
     });
     const data = await response.json();
     if (data.result) {
