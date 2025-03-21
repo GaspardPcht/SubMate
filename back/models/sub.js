@@ -4,7 +4,8 @@ const SubSchema = mongoose.Schema({
   name: { type: String, required: true },
   price: { type: Number, required: true },
   billingCycle: { type: String, required: true },
-  // nextBillingDate: { type: Date, required: true }
+  nextBillingDate: { type: Date },
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }
 });
 
 const Sub = mongoose.model('Sub', SubSchema);

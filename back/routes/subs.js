@@ -54,35 +54,48 @@ router.post('/create', async (req, res) => {
 });
 
 // Supprimer un abonnement
-router.delete('/delete/:id/:userId', (req, res) => {
-  const { id, userId } = req.params;
+router.delete('/delete/:id/:userId', async (req, res) => {
+  try {
+    const { id, userId } = req.params;
 
-  if (!id || !userId) {
-    return res.json({result: false, error: 'L\'ID de l\'abonnement et de l\'utilisateur sont requis'});
-  } 
+    if (!id || !userId) {
+      return res.json({ result: false, error: 'L\'ID de l\'abonnement et de l\'utilisateur sont requis' });
+    }
 
-  User.findById(userId).then(user => {
+    const user = await User.findById(userId);
     if (!user) {
-      return res.json({result: false, error: 'Utilisateur non trouvé'});
+      return res.json({ result: false, error: 'Utilisateur non trouvé' });
     }
 
     // Vérifier si l'abonnement appartient à l'utilisateur
-    const subIndex = user.subscriptions.indexOf(id);
+    const subIndex = user.subscriptions.findIndex(subId => 
+      subId.toString() === id.toString()
+    );
+    
     if (subIndex === -1) {
-      return res.json({result: false, error: 'Abonnement non trouvé ou non autorisé'});
+      return res.json({ result: false, error: 'Abonnement non trouvé ou non autorisé' });
     }
 
-    // Supprimer l'abonnement et le retirer de la liste de l'utilisateur
-    Sub.findByIdAndDelete(id).then(sub => {
-      if (!sub) {
-        return res.json({result: false, error: 'Abonnement non trouvé'});
-      }
-      user.subscriptions.splice(subIndex, 1);
-      user.save().then(() => {
-        res.json({result: true, sub});
-      });
+    // Supprimer l'abonnement
+    const deletedSub = await Sub.findByIdAndDelete(id);
+    if (!deletedSub) {
+      return res.json({ result: false, error: 'Abonnement non trouvé' });
+    }
+
+    // Retirer l'abonnement de la liste de l'utilisateur
+    user.subscriptions.splice(subIndex, 1);
+    await user.save();
+
+    console.log('Abonnement supprimé avec succès:', {
+      deletedSub,
+      userSubscriptions: user.subscriptions
     });
-  });
+
+    res.json({ result: true, sub: deletedSub });
+  } catch (error) {
+    console.error('Erreur lors de la suppression:', error);
+    res.json({ result: false, error: 'Erreur lors de la suppression de l\'abonnement' });
+  }
 });
 
 // Mettre à jour un abonnement
