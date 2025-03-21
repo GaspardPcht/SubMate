@@ -18,7 +18,6 @@ const AddSubscriptionScreen: React.FC<AddSubscriptionScreenProps> = ({ navigatio
   const [showDatePicker, setShowDatePicker] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
 
-  console.log(nextBillingDate);
 
   const handleDateChange = (event: any, selectedDate?: Date): void => {
     setShowDatePicker(false);
