@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
 import { TextInput, Button, Text } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -6,40 +6,48 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types';
 import { Image } from 'react-native';
 import { AlertNotificationRoot, Toast, ALERT_TYPE } from 'react-native-alert-notification';
-import { setUser } from '../store/userStore';
+import { useAppDispatch, useAppSelector } from '../redux/hooks';
+import { loginUser, clearError } from '../redux/slices/authSlice';
 
 type LoginScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Login'>;
 };
 
 const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
-  const [email, setEmail] = useState<string>('g@g.com');
-  const [password, setPassword] = useState<string>('g');
-  const [loading, setLoading] = useState<boolean>(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  
+  const dispatch = useAppDispatch();
+  const { user, loading, error } = useAppSelector((state) => state.auth);
 
-  const handleLogin = async (): Promise<void> => {
-    setLoading(true);
-    const response = await fetch('http://localhost:3000/users/login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ email, password }),
-    });
-    const data = await response.json();
-    if (data.result) {
-      setUser({
-        _id: data.user._id,
-      });
-      navigation.replace('MainApp');
-    } else {
+  useEffect(() => {
+    if (user) {
+      navigation.replace('MainTabs');
+    }
+  }, [user, navigation]);
+
+  useEffect(() => {
+    if (error) {
       Toast.show({
         type: ALERT_TYPE.DANGER,
         title: 'Erreur',
-        textBody: data.error
+        textBody: error
       });
+      dispatch(clearError());
     }
-    setLoading(false);
+  }, [error, dispatch]);
+
+  const handleLogin = async () => {
+    if (!email || !password) {
+      Toast.show({
+        type: ALERT_TYPE.DANGER,
+        title: 'Erreur',
+        textBody: 'Veuillez remplir tous les champs'
+      });
+      return;
+    }
+
+    dispatch(loginUser({ email, password }));
   };
 
   return (
@@ -82,10 +90,10 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
 
           <Button
             mode="text"
-            onPress={() => navigation.navigate('Register')}
+            onPress={() => navigation.navigate('Signup')}
             style={styles.button}
           >
-            Créer un compte
+            Pas encore de compte ? S'inscrire
           </Button>
         </View>
       </KeyboardAvoidingView>

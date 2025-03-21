@@ -1,9 +1,9 @@
 export interface User {
-  id: string;
-  name: string;
+  _id: string;
+  firstname: string;
+  lastname: string;
   email: string;
-  totalSubscriptions: number;
-  monthlyTotal: number;
+  token: string;
 }
 
 export interface Subscription {
@@ -11,7 +11,7 @@ export interface Subscription {
   name: string;
   price: number;
   billingCycle: 'monthly' | 'yearly';
-  nextBillingDate: string;
+  nextBillingDate?: string;
   userId: string;
 }
 
@@ -24,8 +24,8 @@ export interface AuthState {
 
 export type RootStackParamList = {
   Login: undefined;
-  Register: undefined;
-  MainApp: undefined;
+  Signup: undefined;
+  MainTabs: undefined;
 };
 
 export type MainTabParamList = {

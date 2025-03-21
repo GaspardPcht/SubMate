@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { TextInput, Button, Text } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -6,43 +6,50 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types';
 import { Image } from 'react-native';
 import { Toast, ALERT_TYPE } from 'react-native-alert-notification';
-type RegisterScreenProps = {
-  navigation: NativeStackNavigationProp<RootStackParamList, 'Register'>;
+import { useAppDispatch, useAppSelector } from '../redux/hooks';
+import { signupUser, clearError } from '../redux/slices/authSlice';
+
+type SignupScreenProps = {
+  navigation: NativeStackNavigationProp<RootStackParamList, 'Signup'>;
 };
 
-const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
-  const [lastname, setLastname] = useState<string>('');
-  const [firstname, setFirstname] = useState<string>('');
-  const [email, setEmail] = useState<string>('');
-  const [password, setPassword] = useState<string>('');
-  const [confirmPassword, setConfirmPassword] = useState<string>('');
-  const [loading, setLoading] = useState<boolean>(false);
+const SignupScreen: React.FC<SignupScreenProps> = ({ navigation }) => {
+  const [firstname, setFirstname] = useState('');
+  const [lastname, setLastname] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
-  const handleRegister = async (): Promise<void> => {
-    if (password !== confirmPassword) {
-      // TODO: Afficher une erreur
-      return;
+  const dispatch = useAppDispatch();
+  const { user, loading, error } = useAppSelector((state) => state.auth);
+
+  useEffect(() => {
+    if (user) {
+      navigation.replace('MainTabs');
     }
+  }, [user, navigation]);
 
-    const response = await fetch('http://localhost:3000/users/signup', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ lastname, firstname, email, password }),
-    });
-    const data = await response.json();
-    console.log(data)
-    if (data.result) {
-      navigation.replace('MainApp');
-    } else {
+  useEffect(() => {
+    if (error) {
       Toast.show({
         type: ALERT_TYPE.DANGER,
         title: 'Erreur',
-        textBody: data.error
+        textBody: error
       });
+      dispatch(clearError());
     }
-    setLoading(false);
+  }, [error, dispatch]);
+
+  const handleSignup = async () => {
+    if (!firstname || !lastname || !email || !password) {
+      Toast.show({
+        type: ALERT_TYPE.DANGER,
+        title: 'Erreur',
+        textBody: 'Veuillez remplir tous les champs'
+      });
+      return;
+    }
+
+    dispatch(signupUser({ firstname, lastname, email, password }));
   };
 
   return (
@@ -54,21 +61,21 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <View style={styles.content}>
             <Image source={require('../../assets/Logo/SubMate_logo.png')} style={styles.logo} />
-            <Text style={styles.title}>Créer un compte</Text>
+            <Text style={styles.title}>Inscription</Text>
             <Text style={styles.subtitle}>Rejoignez SubMate pour gérer vos abonnements</Text>
-
-            <TextInput
-              label="Nom"
-              value={lastname}
-              onChangeText={setLastname}
-              mode="outlined"
-              style={styles.input}
-            />
 
             <TextInput
               label="Prénom"
               value={firstname}
               onChangeText={setFirstname}
+              mode="outlined"
+              style={styles.input}
+            />
+
+            <TextInput
+              label="Nom"
+              value={lastname}
+              onChangeText={setLastname}
               mode="outlined"
               style={styles.input}
             />
@@ -92,18 +99,9 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
               secureTextEntry
             />
 
-            <TextInput
-              label="Confirmer le mot de passe"
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-              mode="outlined"
-              style={styles.input}
-              secureTextEntry
-            />
-
             <Button
               mode="contained"
-              onPress={handleRegister}
+              onPress={handleSignup}
               style={styles.button}
               loading={loading}
             >
@@ -165,4 +163,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default RegisterScreen; 
+export default SignupScreen; 

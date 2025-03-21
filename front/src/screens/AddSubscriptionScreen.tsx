@@ -4,11 +4,10 @@ import { TextInput, Button, Text, SegmentedButtons } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
-import { MainTabParamList, Subscription } from '../types';
-import { AlertNotificationRoot, Toast, ALERT_TYPE } from 'react-native-alert-notification';
-import { useStore } from '@nanostores/react';
-import { $user } from '../store/userStore';
-import { addSubscription } from '../store/subscriptionStore';
+import { MainTabParamList } from '../types';
+import { Toast, ALERT_TYPE } from 'react-native-alert-notification';
+import { useAppDispatch, useAppSelector } from '../redux/hooks';
+import { addSubscription } from '../redux/slices/subscriptionSlice';
 
 type AddSubscriptionScreenProps = {
   navigation: BottomTabNavigationProp<MainTabParamList, 'Add'>;
@@ -20,8 +19,10 @@ const AddSubscriptionScreen: React.FC<AddSubscriptionScreenProps> = ({ navigatio
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
   const [nextBillingDate, setNextBillingDate] = useState<Date>(new Date());
   const [showDatePicker, setShowDatePicker] = useState<boolean>(false);
-  const [loading, setLoading] = useState<boolean>(false);
-  const user = useStore($user);
+
+  const dispatch = useAppDispatch();
+  const { user } = useAppSelector((state) => state.auth);
+  const { loading } = useAppSelector((state) => state.subscriptions);
 
   const handleDateChange = (event: any, selectedDate?: Date): void => {
     setShowDatePicker(false);
@@ -40,46 +41,27 @@ const AddSubscriptionScreen: React.FC<AddSubscriptionScreenProps> = ({ navigatio
       return;
     }
 
-    setLoading(true);
     try {
-      const response = await fetch('http://localhost:3000/subs/create', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name,
-          price: Number(price),
-          billingCycle,
-          nextBillingDate: nextBillingDate.toISOString(),
-          userId: user._id
-        }),
+      await dispatch(addSubscription({
+        name,
+        price: Number(price),
+        billingCycle,
+        nextBillingDate: nextBillingDate.toISOString(),
+        userId: user._id
+      })).unwrap();
+
+      Toast.show({
+        type: ALERT_TYPE.SUCCESS,
+        title: 'Succès',
+        textBody: 'Abonnement ajouté avec succès'
       });
-      
-      const data = await response.json();
-      if (data.result) {
-        addSubscription(data.sub);
-        Toast.show({
-          type: ALERT_TYPE.SUCCESS,
-          title: 'Succès',
-          textBody: 'Abonnement ajouté avec succès'
-        });
-        navigation.navigate('Home');
-      } else {
-        Toast.show({
-          type: ALERT_TYPE.DANGER,
-          title: 'Erreur',
-          textBody: data.error
-        });
-      }
+      navigation.navigate('Home');
     } catch (error) {
       Toast.show({
         type: ALERT_TYPE.DANGER,
         title: 'Erreur',
-        textBody: 'Une erreur est survenue lors de l\'ajout de l\'abonnement'
+        textBody: error instanceof Error ? error.message : 'Une erreur est survenue lors de l\'ajout de l\'abonnement'
       });
-    } finally {
-      setLoading(false);
     }
   };
 

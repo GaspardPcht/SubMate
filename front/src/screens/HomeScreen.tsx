@@ -1,33 +1,25 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import { View, StyleSheet, FlatList } from 'react-native';
 import { Text } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useStore } from '@nanostores/react';
-import { $user } from '../store/userStore';
-import { $subscriptions, setSubscriptions } from '../store/subscriptionStore';
+import { useAppDispatch, useAppSelector } from '../redux/hooks';
+import { fetchSubscriptions } from '../redux/slices/subscriptionSlice';
 import SubscriptionCard from '../components/SubscriptionCard';
 
 const HomeScreen = () => {
-  const user = useStore($user);
-  const subscriptions = useStore($subscriptions);
+  const dispatch = useAppDispatch();
+  const { user } = useAppSelector((state) => state.auth);
+  const { subscriptions, loading } = useAppSelector((state) => state.subscriptions);
+
+  const loadSubscriptions = useCallback(async () => {
+    if (user?._id) {
+      await dispatch(fetchSubscriptions(user._id)).unwrap();
+    }
+  }, [user?._id, dispatch]);
 
   useEffect(() => {
-    if (user?._id) {
-      loadSubscriptions();
-    }
-  }, [user?._id]);
-
-  const loadSubscriptions = async () => {
-    try {
-      const response = await fetch(`http://localhost:3000/subs/user/${user?._id}`);
-      const data = await response.json();
-      if (data.result) {
-        setSubscriptions(data.subs);
-      }
-    } catch (error) {
-      console.error('Erreur lors du chargement des abonnements:', error);
-    }
-  };
+    loadSubscriptions();
+  }, [loadSubscriptions]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -36,10 +28,15 @@ const HomeScreen = () => {
         <FlatList
           data={subscriptions}
           renderItem={({ item }) => (
-            <SubscriptionCard subscription={item} onRefresh={loadSubscriptions} />
+            <SubscriptionCard 
+              subscription={item} 
+              onRefresh={loadSubscriptions}
+            />
           )}
           keyExtractor={(item) => item._id}
           contentContainerStyle={styles.list}
+          refreshing={loading}
+          onRefresh={loadSubscriptions}
         />
       </View>
     </SafeAreaView>

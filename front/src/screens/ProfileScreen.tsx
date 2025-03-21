@@ -2,27 +2,21 @@ import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Text, Button, Avatar, List } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useAppDispatch, useAppSelector } from '../redux/hooks';
+import { logout } from '../redux/slices/authSlice';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
-import { MainTabParamList, User } from '../types';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { MainTabParamList } from '../types';
 
 type ProfileScreenProps = {
   navigation: BottomTabNavigationProp<MainTabParamList, 'Profile'>;
 };
 
 const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
-  // TODO: Remplacer par les vraies données de l'utilisateur
-  const user: User = {
-    id: '1',
-    name: 'John Doe',
-    email: 'john@example.com',
-    totalSubscriptions: 5,
-    monthlyTotal: 49.95,
-  };
+  const dispatch = useAppDispatch();
+  const { user } = useAppSelector((state) => state.auth);
 
-  const handleLogout = async (): Promise<void> => {
-    // TODO: Implémenter la logique de déconnexion avec le backend
-    // Pour l'instant, on simule une déconnexion réussie
+  const handleLogout = () => {
+    dispatch(logout());
     navigation.replace('Login');
   };
 
@@ -31,20 +25,20 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
       <View style={styles.header}>
         <Avatar.Text
           size={80}
-          label={user.name.split(' ').map(n => n[0]).join('')}
+          label={user?.firstname?.[0] + user?.lastname?.[0] || ''}
           style={styles.avatar}
         />
-        <Text style={styles.name}>{user.name}</Text>
-        <Text style={styles.email}>{user.email}</Text>
+        <Text style={styles.name}>{user?.firstname} {user?.lastname}</Text>
+        <Text style={styles.email}>{user?.email}</Text>
       </View>
 
       <View style={styles.stats}>
         <View style={styles.statItem}>
-          <Text style={styles.statValue}>{user.totalSubscriptions}</Text>
+          <Text style={styles.statValue}>0</Text>
           <Text style={styles.statLabel}>Abonnements</Text>
         </View>
         <View style={styles.statItem}>
-          <Text style={styles.statValue}>{user.monthlyTotal}€</Text>
+          <Text style={styles.statValue}>0€</Text>
           <Text style={styles.statLabel}>Total mensuel</Text>
         </View>
       </View>

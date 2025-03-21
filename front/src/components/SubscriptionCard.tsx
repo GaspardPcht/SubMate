@@ -3,10 +3,9 @@ import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Card, Text } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { Subscription } from '../types';
-import { removeSubscription } from '../store/subscriptionStore';
+import { useAppDispatch, useAppSelector } from '../redux/hooks';
+import { deleteSubscription } from '../redux/slices/subscriptionSlice';
 import { Toast, ALERT_TYPE } from 'react-native-alert-notification';
-import { useStore } from '@nanostores/react';
-import { $user } from '../store/userStore';
 
 interface SubscriptionCardProps {
   subscription: Subscription;
@@ -14,7 +13,8 @@ interface SubscriptionCardProps {
 }
 
 const SubscriptionCard: React.FC<SubscriptionCardProps> = ({ subscription, onRefresh }) => {
-  const user = useStore($user);
+  const dispatch = useAppDispatch();
+  const { user } = useAppSelector((state) => state.auth);
 
   const handleDelete = async () => {
     if (!user?._id) {
@@ -27,39 +27,23 @@ const SubscriptionCard: React.FC<SubscriptionCardProps> = ({ subscription, onRef
     }
 
     try {
-      const response = await fetch(`http://localhost:3000/subs/delete/${subscription._id}/${user._id}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        }
+      await dispatch(deleteSubscription({ 
+        subscriptionId: subscription._id, 
+        userId: user._id 
+      })).unwrap();
+      
+      Toast.show({
+        type: ALERT_TYPE.SUCCESS,
+        title: 'Succès',
+        textBody: 'Abonnement supprimé avec succès'
       });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      if (data.result) {
-        removeSubscription(subscription._id);
-        Toast.show({
-          type: ALERT_TYPE.SUCCESS,
-          title: 'Succès',
-          textBody: 'Abonnement supprimé avec succès'
-        });
-        await onRefresh();
-      } else {
-        Toast.show({
-          type: ALERT_TYPE.DANGER,
-          title: 'Erreur',
-          textBody: data.error || 'Erreur lors de la suppression'
-        });
-      }
+      
+      await onRefresh();
     } catch (error) {
-      console.error('Erreur lors de la suppression:', error);
       Toast.show({
         type: ALERT_TYPE.DANGER,
         title: 'Erreur',
-        textBody: 'Erreur lors de la suppression de l\'abonnement'
+        textBody: error instanceof Error ? error.message : 'Erreur lors de la suppression'
       });
     }
   };
