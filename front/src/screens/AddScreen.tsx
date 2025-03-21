@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
-import { TextInput, Button, Text } from 'react-native-paper';
+import { TextInput, Button, Text, SegmentedButtons } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types';
 import { useAppSelector } from '../redux/hooks';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import { apiConfig } from '../config/api';
 
 type AddScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Add'>;
@@ -24,11 +25,9 @@ const AddScreen: React.FC<AddScreenProps> = ({ navigation }) => {
     if (!user?._id) return;
     
     setLoading(true);
-    const response = await fetch('http://localhost:3000/subs', {
+    const response = await fetch(`${apiConfig.baseURL}/subs`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: apiConfig.headers,
       body: JSON.stringify({
         name,
         price: parseFloat(price),

@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { Subscription } from '../../types';
+import { apiConfig } from '../../config/api';
 
 interface SubscriptionState {
   subscriptions: Subscription[];
@@ -16,7 +17,7 @@ const initialState: SubscriptionState = {
 export const fetchSubscriptions = createAsyncThunk(
   'subscriptions/fetch',
   async (userId: string) => {
-    const response = await fetch(`http://localhost:3000/subs/user/${userId}`);
+    const response = await fetch(`${apiConfig.baseURL}/subs/user/${userId}`);
     const data = await response.json();
     if (!data.result) {
       throw new Error(data.error);
@@ -34,11 +35,9 @@ export const addSubscription = createAsyncThunk(
     nextBillingDate: string;
     userId: string;
   }) => {
-    const response = await fetch('http://localhost:3000/subs/create', {
+    const response = await fetch(`${apiConfig.baseURL}/subs/create`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: apiConfig.headers,
       body: JSON.stringify(subscription),
     });
     const data = await response.json();
@@ -52,11 +51,9 @@ export const addSubscription = createAsyncThunk(
 export const deleteSubscription = createAsyncThunk(
   'subscriptions/delete',
   async ({ subscriptionId, userId }: { subscriptionId: string; userId: string }) => {
-    const response = await fetch(`http://localhost:3000/subs/delete/${subscriptionId}/${userId}`, {
+    const response = await fetch(`${apiConfig.baseURL}/subs/delete/${subscriptionId}/${userId}`, {
       method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: apiConfig.headers,
     });
     const data = await response.json();
     if (!data.result) {

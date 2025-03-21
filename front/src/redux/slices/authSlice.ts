@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { User } from '../../types';
+import { apiConfig } from '../../config/api';
 
 interface AuthState {
   user: User | null;
@@ -16,11 +17,9 @@ const initialState: AuthState = {
 export const loginUser = createAsyncThunk(
   'auth/login',
   async ({ email, password }: { email: string; password: string }) => {
-    const response = await fetch('http://localhost:3000/users/login', {
+    const response = await fetch(`${apiConfig.baseURL}/users/login`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: apiConfig.headers,
       body: JSON.stringify({ email, password }),
     });
     const data = await response.json();
@@ -34,11 +33,9 @@ export const loginUser = createAsyncThunk(
 export const signupUser = createAsyncThunk(
   'auth/signup',
   async ({ firstname, lastname, email, password }: { firstname: string; lastname: string; email: string; password: string }) => {
-    const response = await fetch('http://localhost:3000/users/signup', {
+    const response = await fetch(`${apiConfig.baseURL}/users/signup`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: apiConfig.headers,
       body: JSON.stringify({ firstname, lastname, email, password }),
     });
     const data = await response.json();

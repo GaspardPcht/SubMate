@@ -86,7 +86,6 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollView}>
         <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
-          <Text style={styles.title}>Mon Profil</Text>
           <View style={styles.header}>
             <Avatar.Text
               size={100}
@@ -98,23 +97,31 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
             <Text style={styles.email}>{user?.email}</Text>
           </View>
 
-          <View style={styles.statsContainer}>
-            {renderStatCard(
-              'Abonnements',
-              stats.totalCount.toString(),
-              'credit-card-multiple'
-            )}
-            {renderStatCard(
-              'Mensuel',
-              `${stats.monthlyTotal}€`,
-              'cash-multiple'
-            )}
-            {renderStatCard(
-              'Annuel',
-              `${stats.yearlyTotal}€`,
-              'calendar-check'
-            )}
-          </View>
+          <Card style={styles.statsCard}>
+            <Card.Content>
+              <View style={styles.statsContainer}>
+                <View style={styles.statItem}>
+                  <MaterialCommunityIcons name="credit-card-multiple" size={24} color={theme.colors.primary} />
+                  <Text style={styles.statValue}>{stats.totalCount}</Text>
+                  <Text style={styles.statLabel}>Abonnements</Text>
+                </View>
+                <View style={styles.statDivider} />
+                <View style={styles.statItem}>
+                  <MaterialCommunityIcons name="cash-multiple" size={24} color={theme.colors.primary} />
+                  <Text style={styles.statValue}>{stats.monthlyTotal}€</Text>
+                  <Text style={styles.statLabel}>Mensuel</Text>
+                </View>
+                <View style={styles.statDivider} />
+                <View style={styles.statItem}>
+                  <MaterialCommunityIcons name="calendar-check" size={24} color={theme.colors.primary} />
+                  <Text style={styles.statValue}>{stats.yearlyTotal}€</Text>
+                  <Text style={styles.statLabel}>Annuel</Text>
+                </View>
+              </View>
+            </Card.Content>
+          </Card>
+
+          <View style={styles.divider} />
 
           <Card style={styles.settingsCard}>
             <Card.Content>
@@ -169,7 +176,6 @@ const styles = StyleSheet.create({
   header: {
     alignItems: 'center',
     padding: 20,
-    backgroundColor: '#fff',
     borderRadius: 12,
     marginBottom: 16,
     elevation: 2,
@@ -190,33 +196,29 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#666',
   },
+  statsCard: {
+    marginBottom: 16,
+    elevation: 2,
+    borderRadius: 12,
+  },
   statsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 16,
-    gap: 8,
-  },
-  statCard: {
-    flex: 1,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  statCardContent: {
     alignItems: 'center',
-    padding: 12,
   },
-  statValue: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginTop: 8,
+  statItem: {
+    flex: 1,
+    alignItems: 'center',
   },
-  statLabel: {
-    fontSize: 12,
-    color: '#666',
-    marginTop: 4,
+  statDivider: {
+    width: 1,
+    height: 40,
+    backgroundColor: '#E0E0E0',
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#E0E0E0',
+    marginVertical: 16,
   },
   settingsCard: {
     elevation: 2,
@@ -243,6 +245,28 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 20,
     marginLeft: 4,
+  },
+  statCard: {
+    flex: 1,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  statCardContent: {
+    alignItems: 'center',
+    padding: 12,
+  },
+  statValue: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginTop: 8,
+  },
+  statLabel: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: 4,
   },
 });
 

@@ -16,11 +16,12 @@ const MainTabs: React.FC = () => {
         tabBarInactiveTintColor: 'gray',
         headerShown: false,
         tabBarStyle: {
-          borderTopWidth: 1,
-          borderTopColor: '#eee',
+          borderTopWidth: 0,
           backgroundColor: '#fff',
-          height: 60,
-          paddingBottom: 5,
+          height: 70,
+          paddingBottom: 10,
+          elevation: 0,
+          shadowOpacity: 0,
         },
       }}
     >

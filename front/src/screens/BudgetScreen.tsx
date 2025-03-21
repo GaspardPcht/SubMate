@@ -10,6 +10,17 @@ import { fetchSubscriptions } from '../redux/slices/subscriptionSlice';
 type BillingCycle = 'monthly' | 'yearly';
 type IconName = keyof typeof MaterialCommunityIcons.glyphMap;
 
+const CHART_COLORS = [
+  '#377AF2', // Bleu principal
+  '#F24B37', // Rouge
+  '#37F2A8', // Vert
+  '#F2B237', // Orange
+  '#9437F2', // Violet
+  '#F237E7', // Rose
+  '#37E4F2', // Cyan
+  '#8CF237', // Vert clair
+];
+
 const BudgetScreen: React.FC = () => {
   const theme = useTheme();
   const dispatch = useAppDispatch();
@@ -34,11 +45,11 @@ const BudgetScreen: React.FC = () => {
   }, []);
 
   const chartData = useMemo(() => {
-    const monthlyData = subscriptions.map(sub => ({
+    const monthlyData = subscriptions.map((sub, index) => ({
       name: sub.name,
       price: sub.billingCycle === 'monthly' ? sub.price : sub.price / 12,
-      color: `#${Math.floor(Math.random()*16777215).toString(16)}`,
-      legendFontColor: '#7F7F7F',
+      color: CHART_COLORS[index % CHART_COLORS.length],
+      legendFontColor: '#666',
     }));
 
     return monthlyData;
@@ -105,21 +116,38 @@ const BudgetScreen: React.FC = () => {
             <Card.Content>
               <Text style={styles.chartTitle}>Répartition des dépenses</Text>
               <View style={styles.chartContainer}>
-                <PieChart
-                  data={chartData}
-                  width={Dimensions.get('window').width - 80}
-                  height={220}
-                  chartConfig={{
-                    color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-                    strokeWidth: 2,
-                  }}
-                  accessor="price"
-                  backgroundColor="transparent"
-                  paddingLeft="15"
-                  absolute
-                  hasLegend={true}
-                  center={[10, 10]}
-                />
+                <View style={styles.chartWrapper}>
+                  <View style={styles.pieContainer}>
+                    <PieChart
+                      data={chartData}
+                      width={Dimensions.get('window').width * 0.55}
+                      height={240}
+                      chartConfig={{
+                        color: (opacity = 1) => `rgba(55, 122, 242, ${opacity})`,
+                      
+                        barPercentage: 0.7,
+                        useShadowColorFromDataset: false,
+                        decimalPlaces: 0,
+                        labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+                      }}
+                      accessor="price"
+                      backgroundColor="transparent"
+                      paddingLeft="0"
+                      absolute
+                      hasLegend={false}
+                      center={[Dimensions.get('window').width * 0.12, 100]}
+                      avoidFalseZero={true}
+                    />
+                  </View>
+                  <View style={styles.legendContainer}>
+                    {chartData.map((item, index) => (
+                      <View key={index} style={styles.legendItem}>
+                        <View style={[styles.legendColor, { backgroundColor: item.color }]} />
+                        <Text style={styles.legendText} numberOfLines={1}>{`${item.name} (${(item.price).toFixed(2)}€)`}</Text>
+                      </View>
+                    ))}
+                  </View>
+                </View>
               </View>
             </Card.Content>
           </Card>
@@ -169,8 +197,9 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   title: {
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: 'bold',
+    color: '#377AF2',
   },
   statsContainer: {
     flexDirection: 'row',
@@ -199,6 +228,7 @@ const styles = StyleSheet.create({
   chartCard: {
     marginBottom: 20,
     elevation: 2,
+    paddingBottom: 20,
   },
   chartTitle: {
     fontSize: 18,
@@ -208,6 +238,47 @@ const styles = StyleSheet.create({
   chartContainer: {
     alignItems: 'center',
     justifyContent: 'center',
+    minHeight: 260,
+  },
+  chartWrapper: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    width: '100%',
+    paddingHorizontal: 8,
+  },
+  pieContainer: {
+    flex: 1.4,
+    alignItems: 'flex-start',
+    justifyContent: 'center',
+    marginRight: 16,
+    height: 260,
+  },
+  legendContainer: {
+    flex: 1,
+    backgroundColor: 'rgba(55, 122, 242, 0.05)',
+    borderWidth: 1,
+    borderColor: 'rgba(55, 122, 242, 0.2)',
+    padding: 12,
+    marginRight: 8,
+    alignSelf: 'flex-start',
+    borderRadius: 12,
+  },
+  legendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 6,
+  },
+  legendColor: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    marginRight: 8,
+  },
+  legendText: {
+    fontSize: 11,
+    color: '#666',
+    flex: 1,
   },
   subscriptionsCard: {
     elevation: 2,
