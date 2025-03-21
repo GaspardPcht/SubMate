@@ -23,17 +23,12 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
     }
 
     setLoading(true);
-    try {
-      // TODO: Implémenter la logique d'inscription avec le backend
-      // Pour l'instant, on simule une inscription réussie
-      setTimeout(() => {
-        navigation.replace('MainApp');
-      }, 1000);
-    } catch (error) {
-      console.error(error);
-    } finally {
+    // TODO: Implémenter la logique d'inscription avec le backend
+    // Pour l'instant, on simule une inscription réussie
+    setTimeout(() => {
+      navigation.replace('MainApp');
       setLoading(false);
-    }
+    }, 1000);
   };
 
   return (

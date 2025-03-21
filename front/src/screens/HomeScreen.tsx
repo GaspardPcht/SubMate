@@ -1,76 +1,73 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, FlatList } from 'react-native';
-import { Text, Card, FAB, Searchbar } from 'react-native-paper';
+import { Text, Card, FAB } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
-import { MainTabParamList, Subscription } from '../types';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { MainTabParamList } from '../types';
 
 type HomeScreenProps = {
-  navigation: BottomTabNavigationProp<MainTabParamList, 'Home'>;
+  navigation: NativeStackNavigationProp<MainTabParamList, 'Home'>;
 };
 
-const mockSubscriptions: Subscription[] = [
-  {
-    id: '1',
-    name: 'Netflix',
-    price: 15.99,
-    billingCycle: 'monthly',
-    nextBillingDate: '2024-04-15',
-  },
-  {
-    id: '2',
-    name: 'Spotify',
-    price: 9.99,
-    billingCycle: 'monthly',
-    nextBillingDate: '2024-04-20',
-  },
-];
-
-interface SubscriptionCardProps {
-  subscription: Subscription;
+interface Subscription {
+  id: string;
+  name: string;
+  price: number;
+  billingCycle: string;
 }
 
-const SubscriptionCard: React.FC<SubscriptionCardProps> = ({ subscription }) => (
-  <Card style={styles.card}>
-    <Card.Content>
-      <Text style={styles.subscriptionName}>{subscription.name}</Text>
-      <Text style={styles.subscriptionPrice}>
-        {subscription.price}€ / {subscription.billingCycle === 'monthly' ? 'Mensuel' : 'Annuel'}
-      </Text>
-      <Text style={styles.nextBilling}>
-        Prochain paiement : {new Date(subscription.nextBillingDate).toLocaleDateString()}
-      </Text>
-    </Card.Content>
-  </Card>
-);
-
 const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
-  const [searchQuery, setSearchQuery] = useState<string>('');
-  const [subscriptions, setSubscriptions] = useState<Subscription[]>(mockSubscriptions);
+  const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
 
-  const filteredSubscriptions = subscriptions.filter(subscription =>
-    subscription.name.toLowerCase().includes(searchQuery.toLowerCase())
+  const loadSubscriptions = async (): Promise<void> => {
+    // TODO: Implémenter la logique de chargement des abonnements avec le backend
+    // Pour l'instant, on utilise des données de test
+    const mockSubscriptions: Subscription[] = [
+      {
+        id: '1',
+        name: 'Netflix',
+        price: 15.99,
+        billingCycle: 'Mensuel',
+      },
+      {
+        id: '2',
+        name: 'Spotify',
+        price: 9.99,
+        billingCycle: 'Mensuel',
+      },
+    ];
+
+    setTimeout(() => {
+      setSubscriptions(mockSubscriptions);
+      setLoading(false);
+    }, 1000);
+  };
+
+  useEffect(() => {
+    loadSubscriptions();
+  }, []);
+
+  const renderSubscription = ({ item }: { item: Subscription }) => (
+    <Card style={styles.card}>
+      <Card.Content>
+        <Text style={styles.subscriptionName}>{item.name}</Text>
+        <Text style={styles.subscriptionPrice}>{item.price}€ / {item.billingCycle}</Text>
+      </Card.Content>
+    </Card>
   );
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Mes Abonnements</Text>
-        <Searchbar
-          placeholder="Rechercher"
-          onChangeText={setSearchQuery}
-          value={searchQuery}
-          style={styles.searchbar}
+      <View style={styles.content}>
+        <Text style={styles.title}>Mes abonnements</Text>
+        <FlatList
+          data={subscriptions}
+          renderItem={renderSubscription}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.list}
         />
       </View>
-
-      <FlatList
-        data={filteredSubscriptions}
-        renderItem={({ item }) => <SubscriptionCard subscription={item} />}
-        keyExtractor={item => item.id}
-        contentContainerStyle={styles.list}
-      />
-
       <FAB
         icon="plus"
         style={styles.fab}
@@ -83,41 +80,31 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  header: {
-    padding: 16,
     backgroundColor: '#fff',
-    elevation: 2,
+  },
+  content: {
+    flex: 1,
+    padding: 20,
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 16,
-  },
-  searchbar: {
-    marginBottom: 8,
+    marginBottom: 20,
   },
   list: {
-    padding: 16,
+    paddingBottom: 20,
   },
   card: {
-    marginBottom: 16,
-    elevation: 2,
+    marginBottom: 15,
   },
   subscriptionName: {
     fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 8,
   },
   subscriptionPrice: {
     fontSize: 16,
     color: '#666',
-    marginBottom: 4,
-  },
-  nextBilling: {
-    fontSize: 14,
-    color: '#999',
+    marginTop: 5,
   },
   fab: {
     position: 'absolute',

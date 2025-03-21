@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types';
 import { Image } from 'react-native';
+import { AlertNotificationRoot, Toast, ALERT_TYPE } from 'react-native-alert-notification';
 
 type LoginScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Login'>;
@@ -17,17 +18,25 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
 
   const handleLogin = async (): Promise<void> => {
     setLoading(true);
-    try {
-      // TODO: Implémenter la logique de connexion avec le backend
-      // Pour l'instant, on simule une connexion réussie
-      setTimeout(() => {
-        navigation.replace('MainApp');
-      }, 1000);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLoading(false);
+    const response = await fetch('http://localhost:3000/users/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, password }),
+    });
+    const data = await response.json();
+    console.log(data);
+    if (data.result) {
+      navigation.replace('MainApp');
+    } else {
+      Toast.show({
+        type: ALERT_TYPE.DANGER,
+        title: 'Erreur',
+        textBody: data.error
+      });
     }
+    setLoading(false);
   };
 
   return (

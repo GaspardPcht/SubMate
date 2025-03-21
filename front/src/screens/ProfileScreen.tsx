@@ -4,6 +4,7 @@ import { Text, Button, Avatar, List } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { MainTabParamList, User } from '../types';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 type ProfileScreenProps = {
   navigation: BottomTabNavigationProp<MainTabParamList, 'Profile'>;
@@ -20,12 +21,9 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
   };
 
   const handleLogout = async (): Promise<void> => {
-    try {
-      // TODO: Implémenter la logique de déconnexion
-      navigation.replace('Login');
-    } catch (error) {
-      console.error(error);
-    }
+    // TODO: Implémenter la logique de déconnexion avec le backend
+    // Pour l'instant, on simule une déconnexion réussie
+    navigation.replace('Login');
   };
 
   return (

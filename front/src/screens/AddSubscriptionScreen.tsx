@@ -27,17 +27,11 @@ const AddSubscriptionScreen: React.FC<AddSubscriptionScreenProps> = ({ navigatio
 
   const handleSubmit = async (): Promise<void> => {
     setLoading(true);
-    try {
-      // TODO: Implémenter la logique d'ajout avec le backend
-      // Pour l'instant, on simule un ajout réussi
-      setTimeout(() => {
-        navigation.goBack();
-      }, 1000);
-    } catch (error) {
-      console.error(error);
-    } finally {
+    // TODO: Implémenter la logique d'ajout d'abonnement avec le backend
+    // Pour l'instant, on simule un ajout réussi
+    setTimeout(() => {
       setLoading(false);
-    }
+    }, 1000);
   };
 
   return (
