@@ -21,6 +21,10 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
+  useEffect(() => {
+    loadSubscriptions();
+  }, []);
+
   const loadSubscriptions = async (): Promise<void> => {
     const response = await fetch('http://localhost:3000/subs');
     const data = await response.json();
@@ -36,9 +40,6 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     }, 1000);
   };
 
-  useEffect(() => {
-    loadSubscriptions();
-  }, []);
 
   const handleDelete = async (_id: string) => {
     const response = await fetch(`http://localhost:3000/subs/delete/${_id}`, {
@@ -47,6 +48,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     const data = await response.json();
     if (data.result) {
       setSubscriptions(data.subs);
+      loadSubscriptions();
     } else {
       console.log(data.error);
     }
@@ -87,6 +89,7 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     padding: 20,
+    paddingTop: 0,
   },
   title: {
     fontSize: 24,
@@ -101,6 +104,8 @@ const styles = StyleSheet.create({
     margin: 16,
     right: 0,
     bottom: 0,
+    backgroundColor: '#377AF2',
+    borderRadius: 100,
   },
 });
 

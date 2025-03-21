@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { MainTabParamList, Subscription } from '../types';
-
+import { AlertNotificationRoot } from 'react-native-alert-notification';
 type AddSubscriptionScreenProps = {
   navigation: BottomTabNavigationProp<MainTabParamList, 'Add'>;
 };
@@ -27,8 +27,23 @@ const AddSubscriptionScreen: React.FC<AddSubscriptionScreenProps> = ({ navigatio
 
   const handleSubmit = async (): Promise<void> => {
     setLoading(true);
-    // TODO: Implémenter la logique d'ajout d'abonnement avec le backend
-    // Pour l'instant, on simule un ajout réussi
+    const response = await fetch('http://localhost:3000/subs/create', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ name, price, billingCycle, nextBillingDate }),
+    });
+    const data = await response.json();
+    if (data.result) {
+      navigation.navigate('Home');
+    } else {
+      <AlertNotificationRoot>
+          title="Erreur"
+          textBody={data.error}
+          type="danger"
+      </AlertNotificationRoot>
+    }
     setTimeout(() => {
       setLoading(false);
     }, 1000);

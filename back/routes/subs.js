@@ -7,8 +7,8 @@ router.get('/', (req, res) => {
 }); 
 
 router.post('/create', (req, res) => {
-  const { name, price, billingCycle } = req.body;
-  if (!name || !price || !billingCycle) {
+  const { name, price, billingCycle, nextBillingDate } = req.body;
+  if (!name || !price || !billingCycle || !nextBillingDate) {
     return res.json({result: false, error: 'Tous les champs sont requis'});
   }
 
@@ -17,7 +17,7 @@ router.post('/create', (req, res) => {
       return res.json({ result: false, error: 'Un abonnement avec ce nom existe déjà' });
     }
     
-    const sub = new Sub({ name, price, billingCycle });
+    const sub = new Sub({ name, price, billingCycle, nextBillingDate });
     sub.save().then(newSub => res.json({result: true, sub}));
   });
 }); 
@@ -26,7 +26,7 @@ router.delete('/delete/:id', (req, res) => {
   if (!req.params.id) {
     return res.json({result: false, error: 'L\'id est requis'});
   } 
-  
+
   Sub.findByIdAndDelete(req.params.id).then(sub => res.json({result: true, sub}));
 });
 
