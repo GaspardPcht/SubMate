@@ -2,7 +2,7 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import HomeScreen from '../screens/HomeScreen';
-import AddSubscriptionScreen from '../screens/AddSubscriptionScreen';
+import BudgetScreen from '../screens/BudgetScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import { MainTabParamList } from '../types';
 
@@ -35,13 +35,13 @@ const MainTabs: React.FC = () => {
         }}
       />
       <Tab.Screen
-        name="Add"
-        component={AddSubscriptionScreen}
+        name="Budget"
+        component={BudgetScreen}
         options={{
           tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="plus-circle" size={size} color={color} />
+            <MaterialCommunityIcons name="chart-pie" size={size} color={color} />
           ),
-          title: 'Ajouter'
+          title: 'Budget'
         }}
       />
       <Tab.Screen

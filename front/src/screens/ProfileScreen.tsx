@@ -61,58 +61,62 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Avatar.Text
-          size={80}
-          label={initials}
-          style={styles.avatar}
-        />
-        <Text style={styles.name}>{user?.firstname} {user?.lastname}</Text>
-        <Text style={styles.email}>{user?.email}</Text>
+      <View style={styles.content}>
+        <View style={styles.header}>
+          <Avatar.Text
+            size={80}
+            label={initials}
+            style={styles.avatar}
+          />
+          <Text style={styles.name}>{user?.firstname} {user?.lastname}</Text>
+          <Text style={styles.email}>{user?.email}</Text>
+        </View>
+
+        <View style={styles.stats}>
+          <View style={styles.statItem}>
+            <Text style={styles.statValue}>{stats.totalCount}</Text>
+            <Text style={styles.statLabel}>Abonnements</Text>
+          </View>
+          <View style={styles.statItem}>
+            <Text style={styles.statValue}>{stats.monthlyTotal}€</Text>
+            <Text style={styles.statLabel}>Total mensuel</Text>
+          </View>
+          <View style={styles.statItem}>
+            <Text style={styles.statValue}>{stats.yearlyTotal}€</Text>
+            <Text style={styles.statLabel}>Total annuel</Text>
+          </View>
+        </View>
+
+        <List.Section>
+          <List.Subheader>Paramètres</List.Subheader>
+          <List.Item
+            title="Modifier le profil"
+            left={props => <List.Icon {...props} icon="account-edit" />}
+            onPress={() => {}}
+          />
+          <List.Item
+            title="Notifications"
+            left={props => <List.Icon {...props} icon="bell" />}
+            onPress={() => {}}
+          />
+          <List.Item
+            title="Aide et support"
+            left={props => <List.Icon {...props} icon="help-circle" />}
+            onPress={() => {}}
+          />
+        </List.Section>
       </View>
 
-      <View style={styles.stats}>
-        <View style={styles.statItem}>
-          <Text style={styles.statValue}>{stats.totalCount}</Text>
-          <Text style={styles.statLabel}>Abonnements</Text>
-        </View>
-        <View style={styles.statItem}>
-          <Text style={styles.statValue}>{stats.monthlyTotal}€</Text>
-          <Text style={styles.statLabel}>Total mensuel</Text>
-        </View>
-        <View style={styles.statItem}>
-          <Text style={styles.statValue}>{stats.yearlyTotal}€</Text>
-          <Text style={styles.statLabel}>Total annuel</Text>
-        </View>
+      <View style={styles.bottomContainer}>
+        <Button
+          mode="outlined"
+          onPress={handleLogout}
+          style={styles.logoutButton}
+          textColor="#ff4444"
+        >
+          Se déconnecter
+        </Button>
       </View>
-
-      <List.Section>
-        <List.Subheader>Paramètres</List.Subheader>
-        <List.Item
-          title="Modifier le profil"
-          left={props => <List.Icon {...props} icon="account-edit" />}
-          onPress={() => {}}
-        />
-        <List.Item
-          title="Notifications"
-          left={props => <List.Icon {...props} icon="bell" />}
-          onPress={() => {}}
-        />
-        <List.Item
-          title="Aide et support"
-          left={props => <List.Icon {...props} icon="help-circle" />}
-          onPress={() => {}}
-        />
-      </List.Section>
-
-      <Button
-        mode="outlined"
-        onPress={handleLogout}
-        style={styles.logoutButton}
-        textColor="#ff4444"
-      >
-        Se déconnecter
-      </Button>
     </SafeAreaView>
   );
 };
@@ -121,6 +125,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
+  },
+  content: {
+    flex: 1,
   },
   header: {
     alignItems: 'center',
@@ -159,8 +166,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
   },
+  bottomContainer: {
+    padding: 20,
+    borderTopColor: '#eee',
+  },
   logoutButton: {
-    margin: 20,
     borderColor: '#ff4444',
   },
 });

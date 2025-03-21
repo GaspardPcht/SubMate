@@ -8,6 +8,7 @@ import { RootStackParamList } from './src/types';
 import LoginScreen from './src/screens/LoginScreen';
 import SignupScreen from './src/screens/SignupScreen';
 import MainTabs from './src/navigation/MainTabs';
+import AddSubscriptionScreen from './src/screens/AddSubscriptionScreen';
 import { AlertNotificationRoot } from 'react-native-alert-notification';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -36,6 +37,7 @@ export default function App() {
               <Stack.Screen name="Login" component={LoginScreen} />
               <Stack.Screen name="Signup" component={SignupScreen} />
               <Stack.Screen name="MainTabs" component={MainTabs} />
+              <Stack.Screen name="Add" component={AddSubscriptionScreen} />
             </Stack.Navigator>
           </NavigationContainer>
         </AlertNotificationRoot>

@@ -6,10 +6,17 @@ import { useAppDispatch, useAppSelector } from '../redux/hooks';
 import { fetchSubscriptions } from '../redux/slices/subscriptionSlice';
 import SubscriptionCard from '../components/SubscriptionCard';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
-import { MainTabParamList } from '../types';
+import { CompositeNavigationProp } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { MainTabParamList, RootStackParamList } from '../types';
+
+type HomeScreenNavigationProp = CompositeNavigationProp<
+  BottomTabNavigationProp<MainTabParamList, 'Home'>,
+  NativeStackNavigationProp<RootStackParamList>
+>;
 
 type HomeScreenProps = {
-  navigation: BottomTabNavigationProp<MainTabParamList, 'Home'>;
+  navigation: HomeScreenNavigationProp;
 };
 
 const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
@@ -27,6 +34,17 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     loadSubscriptions();
   }, [loadSubscriptions]);
 
+  const renderEmptyState = () => (
+    <View style={styles.emptyState}>
+      <Text style={styles.emptyStateText}>
+        Vous n'avez pas encore d'abonnements
+      </Text>
+      <Text style={styles.emptyStateSubText}>
+        Cliquez sur le bouton + pour ajouter votre premier abonnement
+      </Text>
+    </View>
+  );
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
@@ -43,11 +61,12 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           contentContainerStyle={styles.list}
           refreshing={loading}
           onRefresh={loadSubscriptions}
+          ListEmptyComponent={renderEmptyState}
         />
         <FAB
           icon="plus"
           style={styles.fab}
-          onPress={() => navigation.navigate('Add')}
+          onPress={() => navigation.getParent()?.navigate('Add')}
         />
       </View>
     </SafeAreaView>
@@ -69,6 +88,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   list: {
+    flexGrow: 1,
     paddingBottom: 20,
   },
   fab: {
@@ -77,6 +97,23 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     backgroundColor: '#377AF2',
+  },
+  emptyState: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  emptyStateText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  emptyStateSubText: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
   },
 });
 

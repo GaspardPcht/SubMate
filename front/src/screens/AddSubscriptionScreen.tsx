@@ -3,14 +3,14 @@ import { View, StyleSheet, ScrollView } from 'react-native';
 import { TextInput, Button, Text, SegmentedButtons } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
-import { MainTabParamList } from '../types';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../types';
 import { Toast, ALERT_TYPE } from 'react-native-alert-notification';
 import { useAppDispatch, useAppSelector } from '../redux/hooks';
 import { addSubscription } from '../redux/slices/subscriptionSlice';
 
 type AddSubscriptionScreenProps = {
-  navigation: BottomTabNavigationProp<MainTabParamList, 'Add'>;
+  navigation: NativeStackNavigationProp<RootStackParamList, 'Add'>;
 };
 
 const initialState = {
@@ -64,7 +64,7 @@ const AddSubscriptionScreen: React.FC<AddSubscriptionScreenProps> = ({ navigatio
         textBody: 'Abonnement ajouté avec succès'
       });
       resetForm();
-      navigation.navigate('Home');
+      navigation.goBack();
     } catch (error) {
       Toast.show({
         type: ALERT_TYPE.DANGER,

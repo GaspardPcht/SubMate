@@ -26,10 +26,11 @@ export type RootStackParamList = {
   Login: undefined;
   Signup: undefined;
   MainTabs: undefined;
+  Add: undefined;
 };
 
 export type MainTabParamList = {
   Home: undefined;
-  Add: undefined;
+  Budget: undefined;
   Profile: undefined;
 }; 
