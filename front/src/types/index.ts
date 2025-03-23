@@ -27,6 +27,7 @@ export type RootStackParamList = {
   Signup: undefined;
   MainTabs: undefined;
   Add: undefined;
+  EditProfile: undefined;
 };
 
 export type MainTabParamList = {

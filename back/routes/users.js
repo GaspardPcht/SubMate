@@ -48,5 +48,44 @@ router.post('/login', (req, res) => {
   });
 });
 
+router.put('/update/:id', (req, res) => {
+  const { id } = req.params;
+  const { firstname, lastname, email, password } = req.body;
+
+  // Vérifier si l'utilisateur existe
+  User.findById(id).then(user => {
+    if (!user) {
+      return res.json({ result: false, error: 'Utilisateur non trouvé' });
+    }
+
+    // Vérifier si le nouvel email est déjà utilisé par un autre utilisateur
+    User.findOne({ email, _id: { $ne: id } }).then(existingUser => {
+      if (existingUser) {
+        return res.json({ result: false, error: 'Cet email est déjà utilisé' });
+      }
+
+      // Préparer les données à mettre à jour
+      const updateData = { firstname, lastname, email };
+      
+      // Si un nouveau mot de passe est fourni, le hasher et l'ajouter aux données
+      if (password) {
+        updateData.password = bcrypt.hashSync(password, 10);
+      }
+
+      // Mettre à jour l'utilisateur
+      User.findByIdAndUpdate(
+        id,
+        updateData,
+        { new: true }
+      ).then(updatedUser => {
+        res.json({ result: true, user: updatedUser });
+      }).catch(error => {
+        res.json({ result: false, error: 'Erreur lors de la mise à jour' });
+      });
+    });
+  }).catch(error => {
+    res.json({ result: false, error: 'Erreur lors de la recherche de l\'utilisateur' });
+  });
+});
 
 module.exports = router;

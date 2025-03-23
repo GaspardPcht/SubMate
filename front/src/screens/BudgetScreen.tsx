@@ -115,39 +115,46 @@ const BudgetScreen: React.FC = () => {
           <Card style={styles.chartCard}>
             <Card.Content>
               <Text style={styles.chartTitle}>Répartition des dépenses</Text>
-              <View style={styles.chartContainer}>
-                <View style={styles.chartWrapper}>
-                  <View style={styles.pieContainer}>
-                    <PieChart
-                      data={chartData}
-                      width={Dimensions.get('window').width * 0.5}
-                      height={160}
-                      chartConfig={{
-                        color: (opacity = 1) => `rgba(55, 122, 242, ${opacity})`,
-                        barPercentage: 0.7,
-                        useShadowColorFromDataset: false,
-                        decimalPlaces: 0,
-                        labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-                      }}
-                      accessor="price"
-                      backgroundColor="transparent"
-                      paddingLeft="0"
-                      absolute
-                      hasLegend={false}
-                      center={[Dimensions.get('window').width * 0.12, 0]}
-                      avoidFalseZero={true}
-                    />
-                  </View>
-                  <View style={styles.legendContainer}>
-                    {chartData.map((item, index) => (
-                      <View key={index} style={styles.legendItem}>
-                        <View style={[styles.legendColor, { backgroundColor: item.color }]} />
-                        <Text style={styles.legendText} numberOfLines={1}>{`${item.name} (${(item.price).toFixed(2)}€)`}</Text>
-                      </View>
-                    ))}
+              {subscriptions.length === 0 ? (
+                <View style={styles.emptyStateContainer}>
+                  <MaterialCommunityIcons name="chart-pie" size={48} color={theme.colors.primary} />
+                  <Text style={styles.emptyStateText}>Pas encore d'abonnements</Text>
+                </View>
+              ) : (
+                <View style={styles.chartContainer}>
+                  <View style={styles.chartWrapper}>
+                    <View style={styles.pieContainer}>
+                      <PieChart
+                        data={chartData}
+                        width={Dimensions.get('window').width * 0.5}
+                        height={160}
+                        chartConfig={{
+                          color: (opacity = 1) => `rgba(55, 122, 242, ${opacity})`,
+                          barPercentage: 0.7,
+                          useShadowColorFromDataset: false,
+                          decimalPlaces: 0,
+                          labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+                        }}
+                        accessor="price"
+                        backgroundColor="transparent"
+                        paddingLeft="0"
+                        absolute
+                        hasLegend={false}
+                        center={[Dimensions.get('window').width * 0.12, 0]}
+                        avoidFalseZero={true}
+                      />
+                    </View>
+                    <View style={styles.legendContainer}>
+                      {chartData.map((item, index) => (
+                        <View key={index} style={styles.legendItem}>
+                          <View style={[styles.legendColor, { backgroundColor: item.color }]} />
+                          <Text style={styles.legendText} numberOfLines={1}>{`${item.name} (${(item.price).toFixed(2)}€)`}</Text>
+                        </View>
+                      ))}
+                    </View>
                   </View>
                 </View>
-              </View>
+              )}
             </Card.Content>
           </Card>
 
@@ -311,6 +318,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1,
     borderColor: 'red',
+  },
+  emptyStateContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 20,
+  },
+  emptyStateText: {
+    fontSize: 16,
+    color: '#666',
+    marginTop: 12,
+    textAlign: 'center',
   },
 });
 

@@ -82,6 +82,8 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
     </Card>
   );
 
+
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollView}>
@@ -89,7 +91,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
           <View style={styles.header}>
             <Avatar.Text
               size={100}
-              label={initials}
+              label={initials.toUpperCase()}
               style={[styles.avatar, { backgroundColor: '#377AF2' }]}
               color={theme.colors.surface}
             />
@@ -129,7 +131,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
               <List.Item
                 title="Modifier le profil"
                 left={props => <List.Icon {...props} icon="account-edit" />}
-                onPress={() => {}}
+                onPress={() => navigation.getParent()?.navigate('EditProfile')}
                 style={styles.listItem}
               />
               <List.Item

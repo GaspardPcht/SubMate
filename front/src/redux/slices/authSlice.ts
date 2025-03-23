@@ -46,6 +46,22 @@ export const signupUser = createAsyncThunk(
   }
 );
 
+export const updateUser = createAsyncThunk(
+  'auth/update',
+  async ({ userId, firstname, lastname, email, password }: { userId: string; firstname: string; lastname: string; email: string; password?: string }) => {
+    const response = await fetch(`${apiConfig.baseURL}/users/update/${userId}`, {
+      method: 'PUT',
+      headers: apiConfig.headers,
+      body: JSON.stringify({ firstname, lastname, email, ...(password && { password }) }),
+    });
+    const data = await response.json();
+    if (!data.result) {
+      throw new Error(data.error);
+    }
+    return data.user;
+  }
+);
+
 const authSlice = createSlice({
   name: 'auth',
   initialState,
@@ -83,6 +99,19 @@ const authSlice = createSlice({
         state.error = null;
       })
       .addCase(signupUser.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message || 'Une erreur est survenue';
+      })
+      .addCase(updateUser.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateUser.fulfilled, (state, action) => {
+        state.loading = false;
+        state.user = action.payload;
+        state.error = null;
+      })
+      .addCase(updateUser.rejected, (state, action) => {
         state.loading = false;
         state.error = action.error.message || 'Une erreur est survenue';
       });
