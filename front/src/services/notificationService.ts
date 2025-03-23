@@ -60,8 +60,8 @@ export const scheduleAllSubscriptionReminders = async (subscriptions: Subscripti
       if (reminderDate > new Date()) {
         await Notifications.scheduleNotificationAsync({
           content: {
-            title: 'Rappel de renouvellement',
-            body: `Votre abonnement ${subscription.name} sera renouvelé dans ${daysBefore} jour${daysBefore > 1 ? 's' : ''}`,
+            title: 'Rappel de débit',
+            body: `Votre abonnement ${subscription.name} se débitera demain pour un montant de ${subscription.price}€`,
             sound: true,
           },
           trigger: {
