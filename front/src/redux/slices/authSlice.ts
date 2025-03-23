@@ -30,7 +30,7 @@ export const loginUser = createAsyncThunk(
 export const registerUser = createAsyncThunk(
   'auth/register',
   async ({ firstname, lastname, email, password }: { firstname: string; lastname: string; email: string; password: string }) => {
-    const response = await api.post('/users/register', { firstname, lastname, email, password });
+    const response = await api.post('/users/signup', { firstname, lastname, email, password });
     if (response.data.result) {
       await AsyncStorage.setItem('token', response.data.token);
       return response.data.user;

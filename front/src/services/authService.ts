@@ -40,7 +40,7 @@ export const login = async (credentials: LoginCredentials): Promise<AuthResponse
 
 export const register = async (data: RegisterData): Promise<AuthResponse> => {
   try {
-    const response = await api.post('/users/register', data);
+    const response = await api.post('/users/signup', data);
     if (response.data.success) {
       console.log('Register successful, storing token:', response.data.token);
       await AsyncStorage.setItem('token', response.data.token);
