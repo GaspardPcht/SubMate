@@ -3,6 +3,29 @@ import { Subscription } from '../../types';
 import { api } from '../../services/api';
 import { Toast, ALERT_TYPE } from 'react-native-alert-notification';
 
+// Fonction utilitaire pour calculer la prochaine date de renouvellement
+const calculateNextBillingDate = (currentDate: string, billingCycle: string): string => {
+  const date = new Date(currentDate);
+  const today = new Date();
+
+  // Si la date est passée, calculer la prochaine date
+  if (date < today) {
+    if (billingCycle.toLowerCase() === 'monthly' || billingCycle === 'Mensuel') {
+      // Ajouter des mois jusqu'à ce que la date soit dans le futur
+      while (date < today) {
+        date.setMonth(date.getMonth() + 1);
+      }
+    } else {
+      // Ajouter des années jusqu'à ce que la date soit dans le futur
+      while (date < today) {
+        date.setFullYear(date.getFullYear() + 1);
+      }
+    }
+  }
+  
+  return date.toISOString();
+};
+
 interface SubscriptionState {
   subscriptions: Subscription[];
   loading: boolean;
@@ -49,11 +72,19 @@ export const addSubscription = createAsyncThunk(
     billingCycle: string;
     nextBillingDate: string;
     userId: string;
-  }) => {
+  }, { dispatch }) => {
     try {
       console.log('Adding subscription:', subscription);
       const response = await api.post('/subs/create', subscription);
       console.log('Add subscription response:', response.data);
+      
+      if (!response.data || !response.data.result) {
+        throw new Error('Format de réponse invalide');
+      }
+
+      // Rafraîchir la liste des abonnements après l'ajout
+      await dispatch(fetchSubscriptions(subscription.userId));
+      
       Toast.show({
         type: ALERT_TYPE.SUCCESS,
         title: 'Succès',
@@ -75,9 +106,17 @@ export const addSubscription = createAsyncThunk(
 
 export const deleteSubscription = createAsyncThunk(
   'subscriptions/delete',
-  async ({ subscriptionId, userId }: { subscriptionId: string; userId: string }) => {
+  async ({ subscriptionId, userId }: { subscriptionId: string; userId: string }, { dispatch }) => {
     try {
-      await api.delete(`/subs/delete/${subscriptionId}/${userId}`);
+      const response = await api.delete(`/subs/delete/${subscriptionId}/${userId}`);
+      
+      if (!response.data || !response.data.result) {
+        throw new Error('Format de réponse invalide');
+      }
+
+      // Rafraîchir la liste des abonnements après la suppression
+      await dispatch(fetchSubscriptions(userId));
+      
       Toast.show({
         type: ALERT_TYPE.SUCCESS,
         title: 'Succès',
@@ -96,6 +135,36 @@ export const deleteSubscription = createAsyncThunk(
   }
 );
 
+export const updateSubscriptionDate = createAsyncThunk(
+  'subscriptions/updateDate',
+  async ({ subscriptionId, userId, subscription }: { 
+    subscriptionId: string; 
+    userId: string;
+    subscription: Subscription;
+  }) => {
+    try {
+      const nextBillingDate = calculateNextBillingDate(
+        subscription.nextBillingDate,
+        subscription.billingCycle
+      );
+
+      const updateResponse = await api.put(`/subs/update/${subscriptionId}/${userId}`, {
+        nextBillingDate
+      });
+
+      if (!updateResponse.data || !updateResponse.data.result) {
+        throw new Error('Format de réponse invalide');
+      }
+
+      return updateResponse.data.sub;
+    } catch (error: any) {
+      console.error('Erreur de mise à jour:', error);
+      const message = error.response?.data?.message || 'Erreur lors de la mise à jour de la date';
+      throw new Error(message);
+    }
+  }
+);
+
 const subscriptionsSlice = createSlice({
   name: 'subscriptions',
   initialState,
@@ -103,6 +172,12 @@ const subscriptionsSlice = createSlice({
     clearError: (state) => {
       state.error = null;
     },
+    updateLocalDates: (state) => {
+      state.subscriptions = state.subscriptions.map(sub => ({
+        ...sub,
+        nextBillingDate: calculateNextBillingDate(sub.nextBillingDate, sub.billingCycle)
+      }));
+    }
   },
   extraReducers: (builder) => {
     builder
@@ -114,7 +189,11 @@ const subscriptionsSlice = createSlice({
       .addCase(fetchSubscriptions.fulfilled, (state, action) => {
         console.log('Abonnements reçus dans le reducer:', action.payload);
         state.loading = false;
-        state.subscriptions = action.payload || [];
+        // Éviter les doublons en utilisant un Map
+        const uniqueSubscriptions = new Map(
+          action.payload.map((sub: Subscription) => [sub._id, sub])
+        );
+        state.subscriptions = Array.from(uniqueSubscriptions.values()) as Subscription[];
         state.error = null;
         console.log('Nouvel état des abonnements dans le store:', state.subscriptions);
       })
@@ -129,7 +208,11 @@ const subscriptionsSlice = createSlice({
       })
       .addCase(addSubscription.fulfilled, (state, action) => {
         state.loading = false;
-        state.subscriptions.push(action.payload);
+        // Vérifier si l'abonnement existe déjà
+        const exists = state.subscriptions.some(sub => sub._id === action.payload._id);
+        if (!exists) {
+          state.subscriptions.push(action.payload);
+        }
         state.error = null;
       })
       .addCase(addSubscription.rejected, (state, action) => {
@@ -150,9 +233,15 @@ const subscriptionsSlice = createSlice({
       .addCase(deleteSubscription.rejected, (state, action) => {
         state.loading = false;
         state.error = action.error.message || 'Une erreur est survenue';
+      })
+      .addCase(updateSubscriptionDate.fulfilled, (state, action) => {
+        const index = state.subscriptions.findIndex(sub => sub._id === action.payload._id);
+        if (index !== -1) {
+          state.subscriptions[index] = action.payload;
+        }
       });
   },
 });
 
-export const { clearError } = subscriptionsSlice.actions;
+export const { clearError, updateLocalDates } = subscriptionsSlice.actions;
 export default subscriptionsSlice.reducer; 

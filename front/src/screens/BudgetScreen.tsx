@@ -170,7 +170,7 @@ const BudgetScreen: React.FC = () => {
                     </Text>
                   </View>
                   <MaterialCommunityIcons
-                    name={sub.billingCycle === 'monthly' ? 'calendar-month' : 'calendar-year' as IconName}
+                    name={sub.billingCycle === 'monthly' ? 'calendar-month' : 'calendar' as IconName}
                     size={24}
                     color={theme.colors.primary}
                   />

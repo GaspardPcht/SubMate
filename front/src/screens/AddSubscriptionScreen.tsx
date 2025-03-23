@@ -7,7 +7,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types';
 import { Toast, ALERT_TYPE } from 'react-native-alert-notification';
 import { useAppDispatch, useAppSelector } from '../redux/hooks';
-import { addSubscription } from '../redux/slices/subscriptionsSlice';
+import { addSubscription, fetchSubscriptions } from '../redux/slices/subscriptionsSlice';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 type AddSubscriptionScreenProps = {
@@ -46,10 +46,31 @@ const AddSubscriptionScreen: React.FC<AddSubscriptionScreenProps> = ({ navigatio
     ]).start();
   }, []);
 
+  const calculateNextBillingDate = (selectedDate: Date, cycle: 'monthly' | 'yearly'): Date => {
+    const nextDate = new Date(selectedDate);
+    
+    // Si la date sélectionnée est aujourd'hui ou dans le passé
+    if (nextDate <= new Date()) {
+      if (cycle === 'monthly') {
+        nextDate.setMonth(nextDate.getMonth() + 1);
+      } else {
+        nextDate.setFullYear(nextDate.getFullYear() + 1);
+      }
+    }
+    
+    return nextDate;
+  };
+
   const handleDateChange = (event: any, selectedDate?: Date): void => {
     if (selectedDate) {
-      setFormState(prev => ({ ...prev, nextBillingDate: selectedDate }));
+      const nextBillingDate = calculateNextBillingDate(selectedDate, formState.billingCycle);
+      setFormState(prev => ({ ...prev, nextBillingDate }));
     }
+  };
+
+  const handleCycleChange = (cycle: 'monthly' | 'yearly') => {
+    const nextBillingDate = calculateNextBillingDate(formState.nextBillingDate, cycle);
+    setFormState(prev => ({ ...prev, billingCycle: cycle, nextBillingDate }));
   };
 
   const resetForm = () => {
@@ -67,22 +88,42 @@ const AddSubscriptionScreen: React.FC<AddSubscriptionScreenProps> = ({ navigatio
     }
 
     try {
-      await dispatch(addSubscription({
+      // Convertir la virgule en point pour le prix
+      const formattedPrice = formState.price.replace(',', '.');
+      const numericPrice = parseFloat(formattedPrice);
+
+      if (isNaN(numericPrice)) {
+        Toast.show({
+          type: ALERT_TYPE.DANGER,
+          title: 'Erreur',
+          textBody: 'Le prix doit être un nombre valide'
+        });
+        return;
+      }
+
+      const result = await dispatch(addSubscription({
         name: formState.name,
-        price: Number(formState.price),
+        price: numericPrice,
         billingCycle: formState.billingCycle,
         nextBillingDate: formState.nextBillingDate.toISOString(),
         userId: user._id
       })).unwrap();
+
+      console.log('Abonnement ajouté avec succès:', result);
 
       Toast.show({
         type: ALERT_TYPE.SUCCESS,
         title: 'Succès',
         textBody: 'Abonnement ajouté avec succès'
       });
+
+      // Rafraîchir la liste des abonnements
+      await dispatch(fetchSubscriptions(user._id));
+
       resetForm();
       navigation.goBack();
     } catch (error) {
+      console.error('Erreur lors de l\'ajout de l\'abonnement:', error);
       Toast.show({
         type: ALERT_TYPE.DANGER,
         title: 'Erreur',
@@ -126,7 +167,13 @@ const AddSubscriptionScreen: React.FC<AddSubscriptionScreenProps> = ({ navigatio
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <Animated.View style={[styles.formContainer, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
           {renderInput('Nom de l\'abonnement', formState.name, (value) => setFormState(prev => ({ ...prev, name: value })), {})}
-          {renderInput('Prix', formState.price, (value) => setFormState(prev => ({ ...prev, price: value })), { 
+          {renderInput('Prix', formState.price, (value) => {
+            // Permettre uniquement les chiffres, la virgule et le point
+            const sanitizedValue = value.replace(/[^0-9,.]/g, '');
+            // S'assurer qu'il n'y a qu'une seule virgule ou un seul point
+            const formattedValue = sanitizedValue.replace(/([,.])[^,.]*([,.])/g, '$1');
+            setFormState(prev => ({ ...prev, price: formattedValue }));
+          }, { 
             keyboardType: 'decimal-pad',
             right: <TextInput.Affix text="€" />
           })}
@@ -137,7 +184,7 @@ const AddSubscriptionScreen: React.FC<AddSubscriptionScreenProps> = ({ navigatio
               <View style={styles.billingCycleContainer}>
                 <Button
                   mode={formState.billingCycle === 'monthly' ? 'contained' : 'outlined'}
-                  onPress={() => setFormState(prev => ({ ...prev, billingCycle: 'monthly' }))}
+                  onPress={() => handleCycleChange('monthly')}
                   style={[styles.billingCycleButton, formState.billingCycle === 'monthly' && styles.activeButton]}
                   icon="calendar-month"
                   labelStyle={styles.buttonLabel}
@@ -146,9 +193,9 @@ const AddSubscriptionScreen: React.FC<AddSubscriptionScreenProps> = ({ navigatio
                 </Button>
                 <Button
                   mode={formState.billingCycle === 'yearly' ? 'contained' : 'outlined'}
-                  onPress={() => setFormState(prev => ({ ...prev, billingCycle: 'yearly' }))}
+                  onPress={() => handleCycleChange('yearly')}
                   style={[styles.billingCycleButton, formState.billingCycle === 'yearly' && styles.activeButton]}
-                  icon="calendar-year"
+                  icon="calendar"
                   labelStyle={styles.buttonLabel}
                 >
                   Annuel

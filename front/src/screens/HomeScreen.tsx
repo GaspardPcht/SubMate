@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback, useMemo } from 'react';
 import { View, StyleSheet, FlatList, Animated, Dimensions } from 'react-native';
 import { Text, FAB, Card, useTheme, IconButton, ActivityIndicator, Surface } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -31,6 +31,31 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     console.log('État actuel des abonnements:', state.subscriptions);
     return state.subscriptions;
   });
+
+  // Trier les abonnements par date de renouvellement
+  const sortedSubscriptions = useMemo(() => {
+    return [...subscriptions].sort((a, b) => {
+      const dateA = new Date(a.nextBillingDate);
+      const dateB = new Date(b.nextBillingDate);
+      const today = new Date();
+      
+      // Calculer la différence en jours entre aujourd'hui et la date de renouvellement
+      const diffA = Math.ceil((dateA.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+      const diffB = Math.ceil((dateB.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+      
+      // Si les deux dates sont passées, les mettre à la fin
+      if (diffA < 0 && diffB < 0) {
+        return dateB.getTime() - dateA.getTime(); // Les plus récentes d'abord
+      }
+      
+      // Si une seule date est passée, la mettre à la fin
+      if (diffA < 0) return 1;
+      if (diffB < 0) return -1;
+      
+      // Pour les dates futures, trier par proximité
+      return diffA - diffB;
+    });
+  }, [subscriptions]);
 
   // Charger les abonnements au montage du composant
   useEffect(() => {
@@ -66,7 +91,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         <View style={styles.headerTitles}>
           <Text style={styles.title}>Mes abonnements</Text>
           <Text style={styles.subtitle}>
-            {subscriptions.length} abonnement{subscriptions.length > 1 ? 's' : ''} actif{subscriptions.length > 1 ? 's' : ''}
+            {sortedSubscriptions.length} abonnement{sortedSubscriptions.length > 1 ? 's' : ''} actif{sortedSubscriptions.length > 1 ? 's' : ''}
           </Text>
         </View>
         <IconButton
@@ -81,7 +106,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={theme.colors.primary} />
         </View>
-      ) : subscriptions.length === 0 ? (
+      ) : sortedSubscriptions.length === 0 ? (
         <View style={styles.emptyState}>
           <MaterialCommunityIcons 
             name="credit-card-multiple"
@@ -97,16 +122,27 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         </View>
       ) : (
         <FlatList
-          data={subscriptions}
-          renderItem={({ item }) => (
-            <SubscriptionCard
-              subscription={item}
-              onRefresh={handleRefresh}
-            />
-          )}
+          data={sortedSubscriptions}
+          renderItem={({ item }) => {
+            console.log('Rendu de l\'abonnement:', item._id);
+            return (
+              <SubscriptionCard
+                subscription={item}
+                onRefresh={handleRefresh}
+              />
+            );
+          }}
           keyExtractor={(item) => item._id}
-          contentContainerStyle={styles.listContent}
-          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.listContainer}
+          refreshing={loading}
+          onRefresh={handleRefresh}
+          ListEmptyComponent={
+            !loading && (
+              <View style={styles.emptyContainer}>
+                <Text style={styles.emptyText}>Aucun abonnement</Text>
+              </View>
+            )
+          }
         />
       )}
 
@@ -149,8 +185,22 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  listContent: {
+  listContainer: {
     padding: 16,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  emptyText: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginTop: 16,
+    marginBottom: 8,
+    color: '#377AF2',
+    textAlign: 'center',
   },
   emptyState: {
     flex: 1,

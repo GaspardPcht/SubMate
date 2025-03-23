@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StyleSheet, TouchableOpacity, View, Modal } from 'react-native';
 import { Card, Text, useTheme, Button } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { Subscription } from '../types';
 import { useAppDispatch, useAppSelector } from '../redux/hooks';
-import { deleteSubscription } from '../redux/slices/subscriptionsSlice';
+import { deleteSubscription, updateSubscriptionDate } from '../redux/slices/subscriptionsSlice';
 import { Toast, ALERT_TYPE } from 'react-native-alert-notification';
 
 interface SubscriptionCardProps {
@@ -17,6 +17,28 @@ const SubscriptionCard: React.FC<SubscriptionCardProps> = ({ subscription, onRef
   const { user } = useAppSelector((state) => state.auth);
   const theme = useTheme();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+  useEffect(() => {
+    const checkAndUpdateDate = async () => {
+      const currentDate = new Date(subscription.nextBillingDate);
+      const today = new Date();
+      
+      // Si la date de renouvellement est passée
+      if (currentDate < today && user?._id) {
+        try {
+          await dispatch(updateSubscriptionDate({
+            subscriptionId: subscription._id,
+            userId: user._id,
+            subscription: subscription
+          })).unwrap();
+        } catch (error) {
+          console.error('Erreur lors de la mise à jour de la date:', error);
+        }
+      }
+    };
+
+    checkAndUpdateDate();
+  }, [subscription.nextBillingDate]);
 
   console.log('SubscriptionCard - subscription:', subscription);
   console.log('SubscriptionCard - nextBillingDate:', subscription.nextBillingDate);

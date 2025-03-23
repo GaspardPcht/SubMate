@@ -64,14 +64,6 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
     loadData();
   }, [dispatch, user?._id]);
 
-  useEffect(() => {
-    if (notificationsEnabled) {
-      scheduleAllSubscriptionReminders();
-    } else {
-      cancelAllScheduledNotifications();
-    }
-  }, [notificationsEnabled]);
-
   const stats = useMemo(() => {
     const totalCount = subscriptions.length;
     const monthlyTotal = subscriptions.reduce((total: number, sub: Subscription) => {
@@ -109,31 +101,36 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
   const handleToggleNotifications = async () => {
     try {
       setLoading(true);
+      
       if (notificationsEnabled) {
         await cancelAllScheduledNotifications();
+        await dispatch(toggleNotifications());
         Toast.show({
           type: ALERT_TYPE.SUCCESS,
           title: 'Succès',
           textBody: 'Notifications désactivées'
         });
-      } else {
-        const { status } = await Notifications.requestPermissionsAsync();
-        if (status !== 'granted') {
-          Toast.show({
-            type: ALERT_TYPE.DANGER,
-            title: 'Erreur',
-            textBody: 'Les permissions de notification sont requises'
-          });
-          return;
-        }
-        await scheduleAllSubscriptionReminders();
-        Toast.show({
-          type: ALERT_TYPE.SUCCESS,
-          title: 'Succès',
-          textBody: 'Notifications activées'
-        });
+        return;
       }
-      dispatch(toggleNotifications());
+
+      const { status } = await Notifications.requestPermissionsAsync();
+      if (status !== 'granted') {
+        Toast.show({
+          type: ALERT_TYPE.DANGER,
+          title: 'Erreur',
+          textBody: 'Les permissions de notification sont requises'
+        });
+        return;
+      }
+
+      await scheduleAllSubscriptionReminders();
+      await dispatch(toggleNotifications());
+      
+      Toast.show({
+        type: ALERT_TYPE.SUCCESS,
+        title: 'Succès',
+        textBody: 'Notifications activées'
+      });
     } catch (error) {
       console.error('Erreur lors de la modification des notifications:', error);
       Toast.show({
