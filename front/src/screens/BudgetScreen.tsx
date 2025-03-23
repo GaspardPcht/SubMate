@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
-import { View, StyleSheet, Dimensions, ScrollView, Animated } from 'react-native';
-import { Text, Card, useTheme, IconButton } from 'react-native-paper';
+import { View, StyleSheet, Dimensions, ScrollView, Animated, Platform } from 'react-native';
+import { Text, Surface, useTheme, IconButton } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAppDispatch, useAppSelector } from '../redux/hooks';
 import { PieChart } from 'react-native-chart-kit';
@@ -76,13 +76,13 @@ const BudgetScreen: React.FC = () => {
   }, [subscriptions]);
 
   const renderStatCard = (title: string, value: string, icon: IconName) => (
-    <Card style={styles.statCard}>
-      <Card.Content style={styles.statCardContent}>
+    <Surface style={styles.statCard} elevation={3}>
+      <View style={styles.statCardContent}>
         <MaterialCommunityIcons name={icon} size={24} color={theme.colors.primary} />
         <Text style={styles.statValue}>{value}</Text>
         <Text style={styles.statTitle}>{title}</Text>
-      </Card.Content>
-    </Card>
+      </View>
+    </Surface>
   );
 
   return (
@@ -112,8 +112,8 @@ const BudgetScreen: React.FC = () => {
             )}
           </View>
 
-          <Card style={styles.chartCard}>
-            <Card.Content>
+          <Surface style={styles.chartCard} elevation={3}>
+            <View style={styles.chartContent}>
               <Text style={styles.chartTitle}>Répartition des dépenses</Text>
               {subscriptions.length === 0 ? (
                 <View style={styles.emptyStateContainer}>
@@ -155,11 +155,11 @@ const BudgetScreen: React.FC = () => {
                   </View>
                 </View>
               )}
-            </Card.Content>
-          </Card>
+            </View>
+          </Surface>
 
-          <Card style={styles.subscriptionsCard}>
-            <Card.Content>
+          <Surface style={styles.subscriptionsCard} elevation={3}>
+            <View style={styles.subscriptionsContent}>
               <Text style={styles.subscriptionsTitle}>Abonnements actifs</Text>
               {subscriptions.map((sub) => (
                 <View key={sub._id} style={styles.subscriptionItem}>
@@ -176,8 +176,8 @@ const BudgetScreen: React.FC = () => {
                   />
                 </View>
               ))}
-            </Card.Content>
-          </Card>
+            </View>
+          </Surface>
         </Animated.View>
       </ScrollView>
     </SafeAreaView>
@@ -215,7 +215,16 @@ const styles = StyleSheet.create({
   statCard: {
     flex: 1,
     marginHorizontal: 4,
-    elevation: 2,
+    borderRadius: 12,
+    backgroundColor: 'white',
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
   },
   statCardContent: {
     alignItems: 'center',
@@ -233,8 +242,19 @@ const styles = StyleSheet.create({
   },
   chartCard: {
     marginBottom: 20,
-    elevation: 2,
-    paddingBottom: 20,
+    borderRadius: 12,
+    backgroundColor: 'white',
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
+  },
+  chartContent: {
+    padding: 16,
   },
   chartTitle: {
     fontSize: 18,
@@ -286,7 +306,20 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   subscriptionsCard: {
-    elevation: 2,
+    marginBottom: 20,
+    borderRadius: 12,
+    backgroundColor: 'white',
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
+  },
+  subscriptionsContent: {
+    padding: 16,
   },
   subscriptionsTitle: {
     fontSize: 18,

@@ -1,6 +1,6 @@
 import React, { useMemo, useEffect, useState } from 'react';
-import { View, StyleSheet, Animated, ScrollView } from 'react-native';
-import { Text, Button, Avatar, List, Card, useTheme, IconButton, Switch, ActivityIndicator } from 'react-native-paper';
+import { View, StyleSheet, Animated, ScrollView, Platform } from 'react-native';
+import { Text, Button, Avatar, List, Surface, useTheme, IconButton, Switch, ActivityIndicator } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAppDispatch, useAppSelector } from '../redux/hooks';
 import { logout } from '../redux/slices/authSlice';
@@ -176,8 +176,8 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
             <Text style={styles.email}>{user?.email}</Text>
           </View>
 
-          <Card style={styles.statsCard}>
-            <Card.Content>
+          <Surface style={styles.statsCard} elevation={2}>
+            <View style={styles.statsContent}>
               {loading ? (
                 <View style={styles.loadingContainer}>
                   <ActivityIndicator size="large" color={theme.colors.primary} />
@@ -215,13 +215,13 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
                   </View>
                 </View>
               )}
-            </Card.Content>
-          </Card>
+            </View>
+          </Surface>
 
           <View style={styles.divider} />
 
-          <Card style={styles.settingsCard}>
-            <Card.Content>
+          <Surface style={styles.settingsCard} elevation={3}>
+            <View style={styles.settingsContent}>
               <Text style={styles.settingsTitle}>Paramètres</Text>
               <List.Item
                 title="Modifier le profil"
@@ -255,8 +255,8 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
                 onPress={() => {}}
                 style={styles.listItem}
               />
-            </Card.Content>
-          </Card>
+            </View>
+          </Surface>
 
           <Button
             mode="outlined"
@@ -288,7 +288,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
     borderRadius: 12,
-    marginBottom: 16,
    
   },
   avatar: {
@@ -304,9 +303,20 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   statsCard: {
-    marginBottom: 16,
-    elevation: 2,
+    margin: 16,
     borderRadius: 12,
+    backgroundColor: 'white',
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
+  },
+  statsContent: {
+    padding: 16,
   },
   statsContainer: {
     flexDirection: 'row',
@@ -328,12 +338,20 @@ const styles = StyleSheet.create({
     marginVertical: 16,
   },
   settingsCard: {
-    elevation: 2,
-    marginBottom: 16,
+    margin: 16,
+    borderRadius: 12,
+    backgroundColor: 'white',
+    overflow: 'hidden',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
+  },
+  settingsContent: {
+    padding: 16,
   },
   settingsTitle: {
     fontSize: 18,

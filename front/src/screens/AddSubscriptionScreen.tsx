@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, Animated, Dimensions, Platform } from 'react-native';
-import { TextInput, Button, Text, useTheme, Card, IconButton, Surface } from 'react-native-paper';
+import { TextInput, Button, Text, useTheme, IconButton, Surface } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -62,10 +62,13 @@ const AddSubscriptionScreen: React.FC<AddSubscriptionScreenProps> = ({ navigatio
   };
 
   const handleDateChange = (event: any, selectedDate?: Date): void => {
+    // Sur Android, on ferme toujours le picker après la sélection
     if (Platform.OS === 'android') {
       setShowDatePicker(false);
     }
-    if (selectedDate) {
+    
+    // Si l'utilisateur a annulé la sélection
+    if (event.type === 'set' && selectedDate) {
       const nextBillingDate = calculateNextBillingDate(selectedDate, formState.billingCycle);
       setFormState(prev => ({ ...prev, nextBillingDate }));
     }
@@ -171,9 +174,7 @@ const AddSubscriptionScreen: React.FC<AddSubscriptionScreenProps> = ({ navigatio
         <Animated.View style={[styles.formContainer, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
           {renderInput('Nom de l\'abonnement', formState.name, (value) => setFormState(prev => ({ ...prev, name: value })), {})}
           {renderInput('Prix', formState.price, (value) => {
-            // Permettre uniquement les chiffres, la virgule et le point
             const sanitizedValue = value.replace(/[^0-9,.]/g, '');
-            // S'assurer qu'il n'y a qu'une seule virgule ou un seul point
             const formattedValue = sanitizedValue.replace(/([,.])[^,.]*([,.])/g, '$1');
             setFormState(prev => ({ ...prev, price: formattedValue }));
           }, { 
@@ -181,8 +182,8 @@ const AddSubscriptionScreen: React.FC<AddSubscriptionScreenProps> = ({ navigatio
             right: <TextInput.Affix text="€" />
           })}
 
-          <Card style={styles.card}>
-            <Card.Content>
+          <Surface style={styles.card} elevation={0}>
+            <View style={styles.cardContent}>
               <Text style={styles.cardTitle}>Fréquence de facturation</Text>
               <View style={styles.billingCycleContainer}>
                 <Button
@@ -204,11 +205,11 @@ const AddSubscriptionScreen: React.FC<AddSubscriptionScreenProps> = ({ navigatio
                   Annuel
                 </Button>
               </View>
-            </Card.Content>
-          </Card>
+            </View>
+          </Surface>
 
-          <Card style={styles.card}>
-            <Card.Content>
+          <Surface style={styles.card} elevation={0}>
+            <View style={styles.cardContent}>
               <Text style={styles.cardTitle}>Prochain paiement</Text>
               <Button
                 mode="outlined"
@@ -227,8 +228,8 @@ const AddSubscriptionScreen: React.FC<AddSubscriptionScreenProps> = ({ navigatio
                   minimumDate={new Date()}
                 />
               )}
-            </Card.Content>
-          </Card>
+            </View>
+          </Surface>
         </Animated.View>
       </ScrollView>
 
@@ -287,8 +288,27 @@ const styles = StyleSheet.create({
   },
   card: {
     marginBottom: 16,
-    elevation: 2,
     borderRadius: 12,
+    backgroundColor: 'white',
+    overflow: 'hidden',
+    ...Platform.select({
+      android: {
+        elevation: 0,
+        shadowColor: 'transparent',
+      },
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: {
+          width: 0,
+          height: 2,
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+      },
+    }),
+  },
+  cardContent: {
+    padding: 16,
   },
   cardTitle: {
     fontSize: 16,
@@ -309,7 +329,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#377AF2',
   },
   dateButton: {
-    marginTop: 8,
+    marginBottom: 16,
   },
   bottomBar: {
     position: 'absolute',
