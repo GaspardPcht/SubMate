@@ -47,7 +47,7 @@ const CustomInput: React.FC<CustomInputProps> = ({
         activeOutlineColor="#377AF2"
         style={{
           backgroundColor: 'white',
-          height: 40,
+          height: 46,
           ...style,
         }}
         contentStyle={{

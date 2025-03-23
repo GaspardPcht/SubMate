@@ -11,6 +11,7 @@ import { addSubscription, fetchSubscriptions } from '../redux/slices/subscriptio
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { CATEGORIES } from '../constants/categories';
 import { CategoryKey } from '../constants/categories';
+import CustomInput from '../components/CustomInput';
 
 type AddSubscriptionScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'AddSubscription'>;
@@ -144,35 +145,6 @@ const AddSubscriptionScreen: React.FC<AddSubscriptionScreenProps> = ({ navigatio
     }
   };
 
-  const renderInput = (label: string, value: string, onChangeText: (text: string) => void, props = {}) => (
-    <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
-      <View style={styles.inputContainer}>
-        <Text style={styles.inputLabel}>{label}</Text>
-        <TextInput
-          value={value}
-          onChangeText={onChangeText}
-          mode="outlined"
-          outlineStyle={{
-            borderRadius: 10,
-            borderWidth: 1,
-            backgroundColor: 'white',
-          }}
-          outlineColor="#e0e0e0"
-          activeOutlineColor="#377AF2"
-          style={{
-            backgroundColor: 'white',
-            height: 40,
-          }}
-          contentStyle={{
-            paddingHorizontal: 6,
-            fontSize: 14,
-          }}
-          {...props}
-        />
-      </View>
-    </Animated.View>
-  );
-
   const toggleCategories = () => {
     setShowCategories(!showCategories);
     Animated.spring(slideAnim, {
@@ -300,21 +272,30 @@ const AddSubscriptionScreen: React.FC<AddSubscriptionScreenProps> = ({ navigatio
             </Animated.View>
           )}
 
-          {renderInput('Nom de l\'abonnement', formState.name, (value) => setFormState(prev => ({ ...prev, name: value })), {
-            placeholder: 'Ex: Netflix, Spotify...',
-            right: <TextInput.Icon icon="tag" color="#377AF2" />,
-            style: { fontSize: 14 }
-          })}
+          <CustomInput
+            label="Nom de l'abonnement"
+            value={formState.name}
+            onChangeText={(value) => setFormState(prev => ({ ...prev, name: value }))}
+            placeholder="Ex: Netflix, Spotify..."
+            right={<TextInput.Icon icon="tag" color="#377AF2" />}
+            fadeAnim={fadeAnim}
+            slideAnim={slideAnim}
+          />
           
-          {renderInput('Prix', formState.price, (value) => {
-            const sanitizedValue = value.replace(/[^0-9,.]/g, '');
-            const formattedValue = sanitizedValue.replace(/([,.])[^,.]*([,.])/g, '$1');
-            setFormState(prev => ({ ...prev, price: formattedValue }));
-          }, { 
-            keyboardType: 'decimal-pad',
-            right: <TextInput.Icon icon="currency-eur" color="#377AF2" />,
-            style: { fontSize: 14 }
-          })}
+          <CustomInput
+            label="Prix"
+            value={formState.price}
+            onChangeText={(value) => {
+              const sanitizedValue = value.replace(/[^0-9,.]/g, '');
+              const formattedValue = sanitizedValue.replace(/([,.])[^,.]*([,.])/g, '$1');
+              setFormState(prev => ({ ...prev, price: formattedValue }));
+            }}
+      
+            keyboardType="decimal-pad"
+            right={<TextInput.Icon icon="currency-eur" color="#377AF2" />}
+            fadeAnim={fadeAnim}
+            slideAnim={slideAnim}
+          />
 
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Fréquence de facturation</Text>

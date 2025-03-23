@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
-import { TextInput, Button, Text, useTheme, IconButton, Surface } from 'react-native-paper';
+import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Animated } from 'react-native';
+import { Button, Text, useTheme, IconButton, Surface } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types';
 import { Toast, ALERT_TYPE } from 'react-native-alert-notification';
 import { useAppDispatch, useAppSelector } from '../redux/hooks';
 import { updateUser } from '../redux/slices/authSlice';
+import CustomInput from '../components/CustomInput';
+import { TextInput } from 'react-native-paper';
 
 type EditProfileScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'EditProfile'>;
@@ -23,6 +25,23 @@ const EditProfileScreen: React.FC<EditProfileScreenProps> = ({ navigation }) => 
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const fadeAnim = React.useRef(new Animated.Value(0)).current;
+  const slideAnim = React.useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 1000,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
 
   const handleUpdate = async () => {
     if (!firstname || !lastname || !email) {
@@ -87,64 +106,73 @@ const EditProfileScreen: React.FC<EditProfileScreenProps> = ({ navigation }) => 
         style={styles.keyboardAvoid}
       >
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-          <View style={styles.formContainer}>
-            <TextInput
+          <Animated.View style={[styles.formContainer, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
+            <CustomInput
               label="Prénom"
               value={firstname}
               onChangeText={setFirstname}
-              mode="outlined"
-              style={styles.input}
+              placeholder="Entrez votre prénom"
+              right={<TextInput.Icon icon="account" color="#377AF2" />}
+              fadeAnim={fadeAnim}
+              slideAnim={slideAnim}
             />
 
-            <TextInput
+            <CustomInput
               label="Nom"
               value={lastname}
               onChangeText={setLastname}
-              mode="outlined"
-              style={styles.input}
+              placeholder="Entrez votre nom"
+              right={<TextInput.Icon icon="account" color="#377AF2" />}
+              fadeAnim={fadeAnim}
+              slideAnim={slideAnim}
             />
 
-            <TextInput
+            <CustomInput
               label="Email"
               value={email}
               onChangeText={setEmail}
-              mode="outlined"
-              style={styles.input}
+              placeholder="Entrez votre email"
               keyboardType="email-address"
-              autoCapitalize="none"
+              right={<TextInput.Icon icon="email" color="#377AF2" />}
+              fadeAnim={fadeAnim}
+              slideAnim={slideAnim}
             />
 
             <Text style={styles.sectionTitle}>Changer le mot de passe</Text>
             <Text style={styles.sectionSubtitle}>Laissez vide pour ne pas modifier</Text>
 
-            <TextInput
+            <CustomInput
               label="Nouveau mot de passe"
               value={password}
               onChangeText={setPassword}
-              mode="outlined"
-              style={styles.input}
+              placeholder="Entrez votre nouveau mot de passe"
               secureTextEntry={!showPassword}
               right={
                 <TextInput.Icon
                   icon={showPassword ? "eye-off" : "eye"}
                   onPress={() => setShowPassword(!showPassword)}
+                  color="#377AF2"
                 />
               }
+              fadeAnim={fadeAnim}
+              slideAnim={slideAnim}
             />
 
-            <TextInput
+            <CustomInput
               label="Confirmer le mot de passe"
               value={confirmPassword}
               onChangeText={setConfirmPassword}
-              mode="outlined"
-              style={styles.input}
+              placeholder="Confirmez votre nouveau mot de passe"
               secureTextEntry={!showConfirmPassword}
               right={
                 <TextInput.Icon
                   icon={showConfirmPassword ? "eye-off" : "eye"}
                   onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                  color="#377AF2"
                 />
               }
+              fadeAnim={fadeAnim}
+              slideAnim={slideAnim}
             />
 
             <Button
@@ -155,7 +183,7 @@ const EditProfileScreen: React.FC<EditProfileScreenProps> = ({ navigation }) => 
             >
               Enregistrer les modifications
             </Button>
-          </View>
+          </Animated.View>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -187,10 +215,6 @@ const styles = StyleSheet.create({
   },
   formContainer: {
     padding: 16,
-  },
-  input: {
-    marginBottom: 16,
-    backgroundColor: '#fff',
   },
   button: {
     marginTop: 8,
