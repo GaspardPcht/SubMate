@@ -14,6 +14,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Subscription } from '../types';
 import { ALERT_TYPE, Toast } from 'react-native-alert-notification';
 import { registerForPushNotifications, scheduleAllSubscriptionReminders, cancelAllScheduledNotificationsAsync } from '../services/notificationService';
+import * as Notifications from 'expo-notifications';
 
 type IconName = keyof typeof MaterialCommunityIcons.glyphMap;
 
@@ -31,7 +32,10 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
   const { subscriptions, loading, error } = useAppSelector((state) => state.subscriptions);
-  const { notificationsEnabled, reminderDays } = useAppSelector((state) => state.userPreferences);
+  const { notificationsEnabled, reminderDays } = useAppSelector((state) => {
+    console.log('État des préférences:', state.userPreferences);
+    return state.userPreferences;
+  });
   const fadeAnim = React.useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -108,34 +112,30 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
   const handleToggleNotifications = async () => {
     try {
       const newState = !notificationsEnabled;
-      console.log('Changement de l\'état des notifications vers:', newState);
+      console.log('État actuel des notifications:', notificationsEnabled);
+      console.log('Tentative de changement vers:', newState);
       
       if (newState) {
         // Si on active les notifications, on demande d'abord la permission
         const token = await registerForPushNotifications();
+        console.log('Token de notification reçu:', token);
         if (!token) {
           Toast.show({
             type: ALERT_TYPE.DANGER,
             title: 'Erreur',
-            textBody: 'Impossible d\'activer les notifications. Veuillez vérifier vos paramètres.'
+            textBody: 'Impossible d\'activer les notifications. Veuillez vérifier vos paramètres système.'
           });
           return;
         }
       }
 
-      // Mettre à jour les préférences dans le backend
-      await dispatch(saveUserPreferences({ notificationsEnabled: newState })).unwrap();
-      
-      // Mettre à jour le state local
+      // Mettre à jour le state local d'abord
       dispatch(toggleNotifications());
       
-      if (newState) {
-        // Programmer les rappels si on active les notifications
-        await scheduleAllSubscriptionReminders(subscriptions, reminderDays);
-      } else {
-        // Annuler tous les rappels si on désactive les notifications
-        await cancelAllScheduledNotificationsAsync();
-      }
+      // Puis sauvegarder dans le backend
+      await dispatch(saveUserPreferences({ notificationsEnabled: newState })).unwrap();
+      
+      console.log('Nouvel état des notifications après mise à jour:', newState);
 
       Toast.show({
         type: ALERT_TYPE.SUCCESS,
@@ -144,6 +144,8 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
       });
     } catch (error) {
       console.error('Erreur lors de la mise à jour des notifications:', error);
+      // En cas d'erreur, on revient à l'état précédent
+      dispatch(toggleNotifications());
       Toast.show({
         type: ALERT_TYPE.DANGER,
         title: 'Erreur',
@@ -222,16 +224,18 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
               />
               <List.Item
                 title="Notifications de rappel"
-         
                 left={props => <List.Icon {...props} icon="bell" />}
-                right={() => (
-                  <Switch
-                    value={notificationsEnabled}
-                    onValueChange={handleToggleNotifications}
-                    color={theme.colors.primary}
-                    style={styles.switch}
-                  />
-                )}
+                right={() => {
+                  console.log('Rendu du switch avec notificationsEnabled:', notificationsEnabled);
+                  return (
+                    <Switch
+                      value={notificationsEnabled}
+                      onValueChange={handleToggleNotifications}
+                      color={notificationsEnabled ? theme.colors.primary : '#9e9e9e'}
+                      style={styles.switch}
+                    />
+                  );
+                }}
                 style={styles.listItem}
               />
               <List.Item

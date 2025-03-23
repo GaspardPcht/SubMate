@@ -13,24 +13,6 @@ Notifications.setNotificationHandler({
 
 export const registerForPushNotifications = async () => {
   try {
-    const { status: existingStatus } = await Notifications.getPermissionsAsync();
-    let finalStatus = existingStatus;
-    
-    if (existingStatus !== 'granted') {
-      const { status } = await Notifications.requestPermissionsAsync();
-      finalStatus = status;
-    }
-    
-    if (finalStatus !== 'granted') {
-      console.log('Permission non accordée pour les notifications');
-      return null;
-    }
-
-    // Obtenir le token sans projectId
-    const token = await Notifications.getExpoPushTokenAsync({
-      projectId: undefined // Utiliser undefined pour éviter l'erreur
-    });
-
     if (Platform.OS === 'android') {
       await Notifications.setNotificationChannelAsync('default', {
         name: 'default',
@@ -39,46 +21,58 @@ export const registerForPushNotifications = async () => {
       });
     }
 
-    return token.data;
+    const { status: existingStatus } = await Notifications.getPermissionsAsync();
+    let finalStatus = existingStatus;
+
+    if (existingStatus !== 'granted') {
+      const { status } = await Notifications.requestPermissionsAsync();
+      finalStatus = status;
+    }
+
+    if (finalStatus !== 'granted') {
+      console.log('Permission refusée pour les notifications');
+      return null;
+    }
+
+    // On retourne un token factice pour permettre l'activation des notifications
+    return 'local-notification-token';
   } catch (error) {
     console.error('Erreur lors de l\'enregistrement des notifications:', error);
     return null;
   }
 };
 
-export const scheduleSubscriptionReminder = async (subscription: Subscription, reminderDays: number) => {
+export const scheduleAllSubscriptionReminders = async (subscriptions: Subscription[], daysBefore: number) => {
   try {
-    const nextBillingDate = new Date(subscription.nextBillingDate);
-    const reminderDate = new Date(nextBillingDate);
-    reminderDate.setDate(reminderDate.getDate() - reminderDays);
-
-    if (reminderDate > new Date()) {
-      await Notifications.scheduleNotificationAsync({
-        content: {
-          title: 'Rappel de paiement',
-          body: `Le paiement de ${subscription.name} (${subscription.price}€) est prévu dans ${reminderDays} jour(s)`,
-        },
-        trigger: {
-          date: reminderDate,
-        },
-      });
-    }
-  } catch (error) {
-    console.error('Erreur lors de la programmation du rappel:', error);
-    throw error;
-  }
-};
-
-export const scheduleAllSubscriptionReminders = async (subscriptions: Subscription[], reminderDays: number) => {
-  try {
+    // Annuler toutes les notifications existantes
     await cancelAllScheduledNotificationsAsync();
-    
+
+    // Programmer de nouvelles notifications pour chaque abonnement
     for (const subscription of subscriptions) {
-      await scheduleSubscriptionReminder(subscription, reminderDays);
+      // Utiliser la date de renouvellement stockée dans l'abonnement
+      const nextBillingDate = new Date(subscription.nextBillingDate);
+      
+      // Ajuster la date pour le rappel
+      const reminderDate = new Date(nextBillingDate);
+      reminderDate.setDate(reminderDate.getDate() - daysBefore);
+
+      // Ne programmer que si la date de rappel est dans le futur
+      if (reminderDate > new Date()) {
+        await Notifications.scheduleNotificationAsync({
+          content: {
+            title: 'Rappel de renouvellement',
+            body: `Votre abonnement ${subscription.name} sera renouvelé dans ${daysBefore} jour${daysBefore > 1 ? 's' : ''}`,
+            sound: true,
+          },
+          trigger: {
+            date: reminderDate,
+            channelId: 'default',
+          },
+        });
+      }
     }
   } catch (error) {
     console.error('Erreur lors de la programmation des rappels:', error);
-    throw error;
   }
 };
 
@@ -87,15 +81,5 @@ export const cancelAllScheduledNotificationsAsync = async () => {
     await Notifications.cancelAllScheduledNotificationsAsync();
   } catch (error) {
     console.error('Erreur lors de l\'annulation des notifications:', error);
-    throw error;
-  }
-};
-
-export const cancelSubscriptionReminder = async (subscriptionId: string) => {
-  try {
-    await Notifications.cancelScheduledNotificationAsync(`subscription-${subscriptionId}`);
-  } catch (error) {
-    console.error('Erreur lors de l\'annulation du rappel:', error);
-    throw error;
   }
 }; 

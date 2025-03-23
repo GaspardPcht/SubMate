@@ -106,7 +106,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                     <View>
                       <Text style={styles.subscriptionName}>{item.name}</Text>
                       <Text style={styles.subscriptionPrice}>
-                        {item.price}€ / {item.billingCycle === 'Mensuel' ? 'mois' : 'an'}
+                        {item.price}€ / {(item.billingCycle === 'monthly' || item.billingCycle === 'Mensuel') ? 'mois' : 'an'}
                       </Text>
                     </View>
                     <TouchableOpacity onPress={() => {
