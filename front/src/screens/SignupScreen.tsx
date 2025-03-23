@@ -18,9 +18,14 @@ const SignupScreen: React.FC<SignupScreenProps> = ({ navigation }) => {
   const [lastname, setLastname] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [emailError, setEmailError] = useState('');
+  const [isEmailValid, setIsEmailValid] = useState(false);
 
   const dispatch = useAppDispatch();
   const { user, loading, error } = useAppSelector((state) => state.auth);
+
+  // Regex plus stricte pour valider l'email
+  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
   useEffect(() => {
     if (user) {
@@ -39,12 +44,47 @@ const SignupScreen: React.FC<SignupScreenProps> = ({ navigation }) => {
     }
   }, [error, dispatch]);
 
+  const validateEmail = (email: string) => {
+    if (!email) {
+      setEmailError('L\'email est requis');
+      setIsEmailValid(false);
+      return false;
+    }
+    if (!email.includes('@')) {
+      setEmailError('L\'email doit contenir un @');
+      setIsEmailValid(false);
+      return false;
+    }
+    if (!email.includes('.')) {
+      setEmailError('L\'email doit contenir un point (.)');
+      setIsEmailValid(false);
+      return false;
+    }
+    if (!emailRegex.test(email)) {
+      setEmailError('Veuillez entrer une adresse email valide');
+      setIsEmailValid(false);
+      return false;
+    }
+    setEmailError('');
+    setIsEmailValid(true);
+    return true;
+  };
+
   const handleSignup = async () => {
-    if (!firstname || !lastname || !email || !password) {
+    if (!firstname || !lastname || !password) {
       Toast.show({
         type: ALERT_TYPE.DANGER,
         title: 'Erreur',
         textBody: 'Veuillez remplir tous les champs'
+      });
+      return;
+    }
+
+    if (!isEmailValid) {
+      Toast.show({
+        type: ALERT_TYPE.DANGER,
+        title: 'Erreur',
+        textBody: 'Veuillez entrer une adresse email valide'
       });
       return;
     }
@@ -83,12 +123,17 @@ const SignupScreen: React.FC<SignupScreenProps> = ({ navigation }) => {
             <TextInput
               label="Email"
               value={email}
-              onChangeText={setEmail}
+              onChangeText={(text) => {
+                setEmail(text);
+                validateEmail(text);
+              }}
               mode="outlined"
-              style={styles.input}
+              style={[styles.input, emailError ? styles.inputError : null]}
               keyboardType="email-address"
               autoCapitalize="none"
+              error={!!emailError}
             />
+            {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
 
             <TextInput
               label="Mot de passe"
@@ -104,6 +149,7 @@ const SignupScreen: React.FC<SignupScreenProps> = ({ navigation }) => {
               onPress={handleSignup}
               style={styles.button}
               loading={loading}
+              disabled={!isEmailValid || !firstname || !lastname || !password}
             >
               S'inscrire
             </Button>
@@ -151,7 +197,16 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   input: {
+    marginBottom: 5,
+  },
+  inputError: {
+    borderColor: '#ff4444',
+  },
+  errorText: {
+    color: '#ff4444',
+    fontSize: 12,
     marginBottom: 15,
+    marginLeft: 4,
   },
   button: {
     marginTop: 10,
