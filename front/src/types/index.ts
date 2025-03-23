@@ -1,3 +1,6 @@
+import { CategoryKey } from '../constants/categories';
+import { BillingCycle } from './subscription';
+
 export interface User {
   _id: string;
   firstname: string;
@@ -10,8 +13,8 @@ export interface Subscription {
   _id: string;
   name: string;
   price: number;
-  billingCycle: 'monthly' | 'yearly' | 'Mensuel' | 'Annuel';
-  category: string;
+  billingCycle: BillingCycle;
+  category: CategoryKey;
   userId: string;
   createdAt: string;
   updatedAt: string;

@@ -21,6 +21,14 @@ const CHART_COLORS = [
   '#8CF237', // Vert clair
 ];
 
+const CATEGORIES = {
+  streaming: { name: 'Streaming', icon: 'play-circle', color: '#377AF2' },
+  services: { name: 'Services', icon: 'cog', color: '#F24B37' },
+  gaming: { name: 'Gaming', icon: 'gamepad-variant', color: '#37F2A8' },
+  fitness: { name: 'Fitness', icon: 'dumbbell', color: '#F2B237' },
+  other: { name: 'Autres', icon: 'dots-horizontal', color: '#9437F2' },
+};
+
 const BudgetScreen: React.FC = () => {
   const theme = useTheme();
   const dispatch = useAppDispatch();
@@ -74,6 +82,40 @@ const BudgetScreen: React.FC = () => {
       }
     }, 0);
   }, [subscriptions]);
+
+  const categorizedExpenses = useMemo(() => {
+    const categories = {
+      streaming: 0,
+      services: 0,
+      gaming: 0,
+      fitness: 0,
+      other: 0,
+    };
+
+    subscriptions.forEach(sub => {
+      const monthlyPrice = sub.billingCycle === 'monthly' ? sub.price : sub.price / 12;
+      if (sub.name.toLowerCase().includes('netflix') || sub.name.toLowerCase().includes('spotify') || sub.name.toLowerCase().includes('prime')) {
+        categories.streaming += monthlyPrice;
+      } else if (sub.name.toLowerCase().includes('cloud') || sub.name.toLowerCase().includes('storage') || sub.name.toLowerCase().includes('backup')) {
+        categories.services += monthlyPrice;
+      } else if (sub.name.toLowerCase().includes('playstation') || sub.name.toLowerCase().includes('xbox') || sub.name.toLowerCase().includes('nintendo')) {
+        categories.gaming += monthlyPrice;
+      } else if (sub.name.toLowerCase().includes('gym') || sub.name.toLowerCase().includes('fitness') || sub.name.toLowerCase().includes('sport')) {
+        categories.fitness += monthlyPrice;
+      } else {
+        categories.other += monthlyPrice;
+      }
+    });
+
+    return Object.entries(categories).map(([key, value]) => ({
+      category: key,
+      amount: value,
+      ...CATEGORIES[key as keyof typeof CATEGORIES],
+    }));
+  }, [subscriptions]);
+
+  const budgetGoal = 100; // Exemple de budget mensuel cible
+  const progress = (totalMonthly / budgetGoal) * 100;
 
   const renderStatCard = (title: string, value: string, icon: IconName) => (
     <Surface style={styles.statCard} elevation={3}>
@@ -158,24 +200,55 @@ const BudgetScreen: React.FC = () => {
             </View>
           </Surface>
 
-          <Surface style={styles.subscriptionsCard} elevation={3}>
-            <View style={styles.subscriptionsCardContent}>
-              <Text style={styles.subscriptionsTitle}>Abonnements actifs</Text>
-              {subscriptions.map((sub) => (
-                <View key={sub._id} style={styles.subscriptionItem}>
-                  <View style={styles.subscriptionInfo}>
-                    <Text style={styles.subscriptionName}>{sub.name}</Text>
-                    <Text style={styles.subscriptionPrice}>
-                      {sub.billingCycle === 'monthly' ? `${sub.price}€/mois` : `${sub.price}€/an`}
+          <Surface style={styles.categoriesCard} elevation={3}>
+            <View style={styles.categoriesCardContent}>
+              <Text style={styles.categoriesTitle}>Catégorisation des dépenses</Text>
+              {categorizedExpenses.map((category) => (
+                <View key={category.category} style={styles.categoryItem}>
+                  <View style={styles.categoryHeader}>
+                    <MaterialCommunityIcons 
+                      name={category.icon as any} 
+                      size={24} 
+                      color={category.color} 
+                    />
+                    <Text style={styles.categoryName}>{category.name}</Text>
+                  </View>
+                  <View style={styles.categoryAmount}>
+                    <Text style={styles.categoryValue}>{category.amount.toFixed(2)}€</Text>
+                    <Text style={styles.categoryPercentage}>
+                      {((category.amount / totalMonthly) * 100).toFixed(1)}%
                     </Text>
                   </View>
-                  <MaterialCommunityIcons
-                    name={sub.billingCycle === 'monthly' ? 'calendar-month' : 'calendar' as IconName}
-                    size={24}
-                    color={theme.colors.primary}
-                  />
                 </View>
               ))}
+            </View>
+          </Surface>
+
+          <Surface style={styles.budgetCard} elevation={3}>
+            <View style={styles.budgetCardContent}>
+              <Text style={styles.budgetTitle}>Objectif budgétaire mensuel</Text>
+              <View style={styles.budgetProgressContainer}>
+                <View style={styles.budgetProgressBar}>
+                  <View 
+                    style={[
+                      styles.budgetProgressFill,
+                      { width: `${Math.min(progress, 100)}%` }
+                    ]} 
+                  />
+                </View>
+                <View style={styles.budgetInfo}>
+                  <Text style={styles.budgetCurrent}>{totalMonthly.toFixed(2)}€</Text>
+                  <Text style={styles.budgetGoal}>sur {budgetGoal}€</Text>
+                </View>
+              </View>
+              <Text style={[
+                styles.budgetStatus,
+                { color: progress > 100 ? '#F24B37' : '#37F2A8' }
+              ]}>
+                {progress > 100 
+                  ? `Dépassement de ${(progress - 100).toFixed(1)}%` 
+                  : `${(100 - progress).toFixed(1)}% restants`}
+              </Text>
             </View>
           </Surface>
         </Animated.View>
@@ -309,7 +382,7 @@ const styles = StyleSheet.create({
     color: '#666',
     flex: 1,
   },
-  subscriptionsCard: {
+  categoriesCard: {
     marginBottom: 20,
     borderRadius: 12,
     backgroundColor: 'white',
@@ -322,17 +395,17 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 10,
   },
-  subscriptionsCardContent: {
+  categoriesCardContent: {
     padding: 16,
     borderRadius: 12,
     backgroundColor: 'white',
   },
-  subscriptionsTitle: {
+  categoriesTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 16,
   },
-  subscriptionItem: {
+  categoryItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -340,17 +413,80 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
   },
-  subscriptionInfo: {
-    flex: 1,
+  categoryHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
-  subscriptionName: {
+  categoryName: {
+    fontSize: 16,
+    marginLeft: 12,
+  },
+  categoryAmount: {
+    alignItems: 'flex-end',
+  },
+  categoryValue: {
     fontSize: 16,
     fontWeight: '500',
   },
-  subscriptionPrice: {
-    fontSize: 14,
+  categoryPercentage: {
+    fontSize: 12,
     color: '#666',
     marginTop: 4,
+  },
+  budgetCard: {
+    marginBottom: 20,
+    borderRadius: 12,
+    backgroundColor: 'white',
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
+  },
+  budgetCardContent: {
+    padding: 16,
+    borderRadius: 12,
+    backgroundColor: 'white',
+  },
+  budgetTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 16,
+  },
+  budgetProgressContainer: {
+    marginBottom: 8,
+  },
+  budgetProgressBar: {
+    height: 8,
+    backgroundColor: '#eee',
+    borderRadius: 4,
+    overflow: 'hidden',
+  },
+  budgetProgressFill: {
+    height: '100%',
+    backgroundColor: '#377AF2',
+    borderRadius: 4,
+  },
+  budgetInfo: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 8,
+  },
+  budgetCurrent: {
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  budgetGoal: {
+    fontSize: 16,
+    color: '#666',
+  },
+  budgetStatus: {
+    fontSize: 14,
+    textAlign: 'center',
+    marginTop: 8,
   },
   emptyStateContainer: {
     alignItems: 'center',

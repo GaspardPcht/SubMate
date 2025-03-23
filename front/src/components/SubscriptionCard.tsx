@@ -98,13 +98,13 @@ const SubscriptionCard: React.FC<SubscriptionCardProps> = ({ subscription, onRef
           <View style={styles.leftContent}>
             <View style={[styles.iconContainer, { backgroundColor: theme.colors.primary + '15' }]}>
               <Text style={styles.letterIcon}>
-                {subscription.name.charAt(0).toUpperCase()}
+                {subscription.name ? subscription.name.charAt(0).toUpperCase() : '?'}
               </Text>
             </View>
             <View style={styles.textContainer}>
               <Text style={styles.subscriptionName}>{subscription.name}</Text>
               <Text style={styles.subscriptionPrice}>
-                {subscription.price}€ / {subscription.billingCycle.toLowerCase() === 'monthly' || subscription.billingCycle === 'Mensuel' ? 'mois' : 'an'}
+                {subscription.price}€ / {subscription.billingCycle === 'monthly' ? 'mois' : 'an'}
               </Text>
             </View>
           </View>

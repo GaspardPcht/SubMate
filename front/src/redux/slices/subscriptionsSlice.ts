@@ -1,16 +1,17 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { Subscription } from '../../types';
+import { Subscription, BillingCycle } from '../../types';
 import { api } from '../../services/api';
 import { Toast, ALERT_TYPE } from 'react-native-alert-notification';
+import { CategoryKey } from '../../constants/categories';
 
 // Fonction utilitaire pour calculer la prochaine date de renouvellement
-const calculateNextBillingDate = (currentDate: string, billingCycle: string): string => {
+const calculateNextBillingDate = (currentDate: string, billingCycle: BillingCycle): string => {
   const date = new Date(currentDate);
   const today = new Date();
 
   // Si la date est passée, calculer la prochaine date
   if (date < today) {
-    if (billingCycle.toLowerCase() === 'monthly' || billingCycle === 'Mensuel') {
+    if (billingCycle === 'monthly') {
       // Ajouter des mois jusqu'à ce que la date soit dans le futur
       while (date < today) {
         date.setMonth(date.getMonth() + 1);
@@ -30,6 +31,15 @@ interface SubscriptionState {
   subscriptions: Subscription[];
   loading: boolean;
   error: string | null;
+}
+
+interface AddSubscriptionPayload {
+  name: string;
+  price: number;
+  billingCycle: BillingCycle;
+  nextBillingDate: string;
+  userId: string;
+  category: CategoryKey;
 }
 
 const initialState: SubscriptionState = {
@@ -65,34 +75,24 @@ export const fetchSubscriptions = createAsyncThunk(
 );
 
 export const addSubscription = createAsyncThunk(
-  'subscriptions/add',
-  async (subscription: {
-    name: string;
-    price: number;
-    billingCycle: string;
-    nextBillingDate: string;
-    userId: string;
-  }, { dispatch }) => {
+  'subscriptions/addSubscription',
+  async (subscription: AddSubscriptionPayload) => {
     try {
-      console.log('Adding subscription:', subscription);
       const response = await api.post('/subs/create', subscription);
-      console.log('Add subscription response:', response.data);
       
       if (!response.data || !response.data.result) {
         throw new Error('Format de réponse invalide');
       }
 
-      // Rafraîchir la liste des abonnements après l'ajout
-      await dispatch(fetchSubscriptions(subscription.userId));
-      
       Toast.show({
         type: ALERT_TYPE.SUCCESS,
         title: 'Succès',
         textBody: 'Abonnement ajouté avec succès'
       });
+
       return response.data.sub;
     } catch (error: any) {
-      console.error('Error adding subscription:', error);
+      console.error('Erreur lors de l\'ajout de l\'abonnement:', error);
       const message = error.response?.data?.message || 'Erreur lors de l\'ajout de l\'abonnement';
       Toast.show({
         type: ALERT_TYPE.DANGER,
