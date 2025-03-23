@@ -14,8 +14,8 @@ type LoginScreenProps = {
 };
 
 const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
-  const [email, setEmail] = useState('g@g.com');
-  const [password, setPassword] = useState('g');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   
   const dispatch = useAppDispatch();
   const { user, loading, error } = useAppSelector((state) => state.auth);

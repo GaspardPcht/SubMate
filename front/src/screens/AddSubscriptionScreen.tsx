@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, Animated, Dimensions } from 'react-native';
+import { View, StyleSheet, ScrollView, Animated, Dimensions, Platform } from 'react-native';
 import { TextInput, Button, Text, useTheme, Card, IconButton, Surface } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -24,7 +24,7 @@ const initialState = {
 const AddSubscriptionScreen: React.FC<AddSubscriptionScreenProps> = ({ navigation }) => {
   const theme = useTheme();
   const [formState, setFormState] = useState(initialState);
-  const [showDatePicker, setShowDatePicker] = useState<boolean>(true);
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
   const { loading } = useAppSelector((state) => state.subscriptions);
@@ -62,6 +62,9 @@ const AddSubscriptionScreen: React.FC<AddSubscriptionScreenProps> = ({ navigatio
   };
 
   const handleDateChange = (event: any, selectedDate?: Date): void => {
+    if (Platform.OS === 'android') {
+      setShowDatePicker(false);
+    }
     if (selectedDate) {
       const nextBillingDate = calculateNextBillingDate(selectedDate, formState.billingCycle);
       setFormState(prev => ({ ...prev, nextBillingDate }));
@@ -207,13 +210,23 @@ const AddSubscriptionScreen: React.FC<AddSubscriptionScreenProps> = ({ navigatio
           <Card style={styles.card}>
             <Card.Content>
               <Text style={styles.cardTitle}>Prochain paiement</Text>
-              <DateTimePicker
-                value={formState.nextBillingDate}
-                mode="date"
-                display="spinner"
-                onChange={handleDateChange}
-                style={styles.datePicker}
-              />
+              <Button
+                mode="outlined"
+                onPress={() => setShowDatePicker(true)}
+                style={styles.dateButton}
+                icon="calendar"
+              >
+                {formState.nextBillingDate.toLocaleDateString('fr-FR')}
+              </Button>
+              {showDatePicker && (
+                <DateTimePicker
+                  value={formState.nextBillingDate}
+                  mode="date"
+                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                  onChange={handleDateChange}
+                  minimumDate={new Date()}
+                />
+              )}
             </Card.Content>
           </Card>
         </Animated.View>
@@ -295,9 +308,8 @@ const styles = StyleSheet.create({
   activeButton: {
     backgroundColor: '#377AF2',
   },
-  datePicker: {
-    width: '100%',
-    height: 200,
+  dateButton: {
+    marginTop: 8,
   },
   bottomBar: {
     position: 'absolute',

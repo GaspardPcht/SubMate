@@ -1,16 +1,15 @@
 import React, { useEffect, useCallback, useMemo } from 'react';
-import { View, StyleSheet, FlatList, Animated, Dimensions } from 'react-native';
-import { Text, FAB, Card, useTheme, IconButton, ActivityIndicator, Surface } from 'react-native-paper';
+import { View, StyleSheet, FlatList, ActivityIndicator, Platform } from 'react-native';
+import { Text, FAB, useTheme, IconButton, Surface } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAppDispatch, useAppSelector } from '../redux/hooks';
-import { fetchSubscriptions, deleteSubscription } from '../redux/slices/subscriptionsSlice';
+import { fetchSubscriptions } from '../redux/slices/subscriptionsSlice';
 import SubscriptionCard from '../components/SubscriptionCard';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { CompositeNavigationProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { MainTabParamList, RootStackParamList, Subscription } from '../types';
+import { MainTabParamList, RootStackParamList } from '../types';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { TouchableOpacity } from 'react-native';
 
 type IconName = keyof typeof MaterialCommunityIcons.glyphMap;
 
@@ -27,10 +26,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const theme = useTheme();
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
-  const { subscriptions, loading } = useAppSelector((state) => {
-    console.log('État actuel des abonnements:', state.subscriptions);
-    return state.subscriptions;
-  });
+  const { subscriptions, loading } = useAppSelector((state) => state.subscriptions);
 
   // Trier les abonnements par date de renouvellement
   const sortedSubscriptions = useMemo(() => {
@@ -83,8 +79,6 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     }
   }, [user?._id, dispatch]);
 
-  console.log('Rendu du HomeScreen avec', subscriptions.length, 'abonnements');
-
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -123,15 +117,12 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
       ) : (
         <FlatList
           data={sortedSubscriptions}
-          renderItem={({ item }) => {
-            console.log('Rendu de l\'abonnement:', item._id);
-            return (
-              <SubscriptionCard
-                subscription={item}
-                onRefresh={handleRefresh}
-              />
-            );
-          }}
+          renderItem={({ item }) => (
+            <SubscriptionCard
+              subscription={item}
+              onRefresh={handleRefresh}
+            />
+          )}
           keyExtractor={(item) => item._id}
           contentContainerStyle={styles.listContainer}
           refreshing={loading}
