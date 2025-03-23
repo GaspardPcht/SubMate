@@ -211,22 +211,34 @@ const AddSubscriptionScreen: React.FC<AddSubscriptionScreenProps> = ({ navigatio
           <Surface style={styles.card} elevation={0}>
             <View style={styles.cardContent}>
               <Text style={styles.cardTitle}>Prochain paiement</Text>
-              <Button
-                mode="outlined"
-                onPress={() => setShowDatePicker(true)}
-                style={styles.dateButton}
-                icon="calendar"
-              >
-                {formState.nextBillingDate.toLocaleDateString('fr-FR')}
-              </Button>
-              {showDatePicker && (
+              {Platform.OS === 'ios' ? (
                 <DateTimePicker
                   value={formState.nextBillingDate}
                   mode="date"
-                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                  display="spinner"
                   onChange={handleDateChange}
                   minimumDate={new Date()}
                 />
+              ) : (
+                <>
+                  <Button
+                    mode="outlined"
+                    onPress={() => setShowDatePicker(true)}
+                    style={styles.dateButton}
+                    icon="calendar"
+                  >
+                    {formState.nextBillingDate.toLocaleDateString('fr-FR')}
+                  </Button>
+                  {showDatePicker && (
+                    <DateTimePicker
+                      value={formState.nextBillingDate}
+                      mode="date"
+                      display="default"
+                      onChange={handleDateChange}
+                      minimumDate={new Date()}
+                    />
+                  )}
+                </>
               )}
             </View>
           </Surface>
@@ -291,27 +303,20 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     backgroundColor: 'white',
     overflow: 'hidden',
-    ...Platform.select({
-      android: {
-        elevation: 0,
-        shadowColor: 'transparent',
-      },
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: {
-          width: 0,
-          height: 2,
-        },
-        shadowOpacity: 0.25,
-        shadowRadius: 3.84,
-      },
-    }),
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
   },
   cardContent: {
     padding: 16,
   },
   cardTitle: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 12,
     color: '#377AF2',

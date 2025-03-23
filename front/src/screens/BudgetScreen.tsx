@@ -113,7 +113,7 @@ const BudgetScreen: React.FC = () => {
           </View>
 
           <Surface style={styles.chartCard} elevation={3}>
-            <View style={styles.chartContent}>
+            <View style={styles.chartCardContent}>
               <Text style={styles.chartTitle}>Répartition des dépenses</Text>
               {subscriptions.length === 0 ? (
                 <View style={styles.emptyStateContainer}>
@@ -159,7 +159,7 @@ const BudgetScreen: React.FC = () => {
           </Surface>
 
           <Surface style={styles.subscriptionsCard} elevation={3}>
-            <View style={styles.subscriptionsContent}>
+            <View style={styles.subscriptionsCardContent}>
               <Text style={styles.subscriptionsTitle}>Abonnements actifs</Text>
               {subscriptions.map((sub) => (
                 <View key={sub._id} style={styles.subscriptionItem}>
@@ -211,13 +211,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 20,
+    gap: 12,
   },
   statCard: {
     flex: 1,
-    marginHorizontal: 4,
     borderRadius: 12,
     backgroundColor: 'white',
-    overflow: 'hidden',
+    elevation: 3,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -227,8 +227,10 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
   },
   statCardContent: {
+    padding: 16,
+    borderRadius: 12,
+    backgroundColor: 'white',
     alignItems: 'center',
-    padding: 12,
   },
   statValue: {
     fontSize: 20,
@@ -236,7 +238,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   statTitle: {
-    fontSize: 12,
+    fontSize: 14,
     color: '#666',
     marginTop: 4,
   },
@@ -244,7 +246,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     borderRadius: 12,
     backgroundColor: 'white',
-    overflow: 'hidden',
+    elevation: 3,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -253,8 +255,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 10,
   },
-  chartContent: {
+  chartCardContent: {
     padding: 16,
+    borderRadius: 12,
+    backgroundColor: 'white',
   },
   chartTitle: {
     fontSize: 18,
@@ -301,7 +305,7 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   legendText: {
-    fontSize: 11,
+    fontSize: 12,
     color: '#666',
     flex: 1,
   },
@@ -309,7 +313,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     borderRadius: 12,
     backgroundColor: 'white',
-    overflow: 'hidden',
+    elevation: 3,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -318,8 +322,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 10,
   },
-  subscriptionsContent: {
+  subscriptionsCardContent: {
     padding: 16,
+    borderRadius: 12,
+    backgroundColor: 'white',
   },
   subscriptionsTitle: {
     fontSize: 18,
@@ -345,12 +351,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
     marginTop: 4,
-  },
-  camenbert: {
-    flex: 1,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'red',
   },
   emptyStateContainer: {
     alignItems: 'center',

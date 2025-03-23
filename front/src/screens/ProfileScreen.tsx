@@ -176,7 +176,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
             <Text style={styles.email}>{user?.email}</Text>
           </View>
 
-          <Surface style={styles.statsCard} elevation={2}>
+          <Surface style={styles.statsCard} elevation={3}>
             <View style={styles.statsContent}>
               {loading ? (
                 <View style={styles.loadingContainer}>
@@ -282,13 +282,14 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
+    flex: 1,
     padding: 16,
   },
   header: {
     alignItems: 'center',
     padding: 20,
     borderRadius: 12,
-   
+    marginBottom: 10,
   },
   avatar: {
     marginBottom: 12,
@@ -303,10 +304,10 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   statsCard: {
-    margin: 16,
     borderRadius: 12,
     backgroundColor: 'white',
     overflow: 'hidden',
+    elevation: 3,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -338,10 +339,11 @@ const styles = StyleSheet.create({
     marginVertical: 16,
   },
   settingsCard: {
-    margin: 16,
+    marginBottom: 20,
     borderRadius: 12,
     backgroundColor: 'white',
     overflow: 'hidden',
+    elevation: 3,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -365,31 +367,13 @@ const styles = StyleSheet.create({
     borderColor: '#ff4444',
     marginTop: 8,
   },
-  title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    marginBottom: 20,
-    marginLeft: 4,
-  },
-  statCard: {
-    flex: 1,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  statCardContent: {
-    alignItems: 'center',
-    padding: 12,
-  },
   statValue: {
     fontSize: 20,
     fontWeight: 'bold',
     marginTop: 8,
   },
   statLabel: {
-    fontSize: 12,
+    fontSize: 14,
     color: '#666',
     marginTop: 4,
   },
@@ -408,9 +392,6 @@ const styles = StyleSheet.create({
     marginVertical: 8,
   },
   retryButton: {
-    marginTop: 8,
-  },
-  button: {
     marginTop: 8,
   },
 });
