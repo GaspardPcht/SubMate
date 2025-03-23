@@ -234,7 +234,6 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
               />
               <List.Item
                 title="Notifications"
-                description="Recevoir des rappels pour les débits d'abonnements"
                 left={props => <List.Icon {...props} icon="bell-outline" />}
                 right={() => (
                   <Switch

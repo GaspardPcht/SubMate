@@ -1,6 +1,6 @@
-import React from 'react';
-import { StyleSheet, TouchableOpacity, View } from 'react-native';
-import { Card, Text, useTheme } from 'react-native-paper';
+import React, { useState } from 'react';
+import { StyleSheet, TouchableOpacity, View, Modal } from 'react-native';
+import { Card, Text, useTheme, Button } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { Subscription } from '../types';
 import { useAppDispatch, useAppSelector } from '../redux/hooks';
@@ -16,6 +16,7 @@ const SubscriptionCard: React.FC<SubscriptionCardProps> = ({ subscription, onRef
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
   const theme = useTheme();
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   console.log('SubscriptionCard - subscription:', subscription);
   console.log('SubscriptionCard - nextBillingDate:', subscription.nextBillingDate);
@@ -31,7 +32,12 @@ const SubscriptionCard: React.FC<SubscriptionCardProps> = ({ subscription, onRef
     return formattedDate;
   };
 
-  const handleDelete = async () => {
+  const handleDeletePress = () => {
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    setShowDeleteModal(false);
     if (!user?._id) {
       Toast.show({
         type: ALERT_TYPE.DANGER,
@@ -64,37 +70,72 @@ const SubscriptionCard: React.FC<SubscriptionCardProps> = ({ subscription, onRef
   };
 
   return (
-    <Card style={styles.card} elevation={2}>
-      <Card.Content style={styles.cardContent}>
-        <View style={styles.leftContent}>
-          <View style={[styles.iconContainer, { backgroundColor: theme.colors.primary + '15' }]}>
-            <Text style={styles.letterIcon}>
-              {subscription.name.charAt(0).toUpperCase()}
+    <>
+      <Card style={styles.card} elevation={2}>
+        <Card.Content style={styles.cardContent}>
+          <View style={styles.leftContent}>
+            <View style={[styles.iconContainer, { backgroundColor: theme.colors.primary + '15' }]}>
+              <Text style={styles.letterIcon}>
+                {subscription.name.charAt(0).toUpperCase()}
+              </Text>
+            </View>
+            <View style={styles.textContainer}>
+              <Text style={styles.subscriptionName}>{subscription.name}</Text>
+              <Text style={styles.subscriptionPrice}>
+                {subscription.price}€ / {subscription.billingCycle.toLowerCase() === 'monthly' || subscription.billingCycle === 'Mensuel' ? 'mois' : 'an'}
+              </Text>
+            </View>
+          </View>
+          <View style={styles.rightContent}>
+            <Text style={styles.renewalDate}>
+              Renouvellement
+            </Text>
+            <Text style={[styles.renewalDateValue, { color: theme.colors.primary }]}>
+              {formatDate(subscription.nextBillingDate)}
             </Text>
           </View>
-          <View style={styles.textContainer}>
-            <Text style={styles.subscriptionName}>{subscription.name}</Text>
-            <Text style={styles.subscriptionPrice}>
-              {subscription.price}€ / {subscription.billingCycle.toLowerCase() === 'monthly' || subscription.billingCycle === 'Mensuel' ? 'mois' : 'an'}
+          <TouchableOpacity 
+            onPress={handleDeletePress}
+            style={[styles.deleteButton, { backgroundColor: '#ff4444' + '15' }]}
+          >
+            <Icon name="delete-outline" size={20} color="#ff4444" />
+          </TouchableOpacity>
+        </Card.Content>
+      </Card>
+
+      <Modal
+        visible={showDeleteModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowDeleteModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Confirmation de suppression</Text>
+            <Text style={styles.modalText}>
+              Êtes-vous sûr de vouloir supprimer l'abonnement "{subscription.name}" ?
             </Text>
+            <View style={styles.modalButtons}>
+              <Button 
+                mode="outlined" 
+                onPress={() => setShowDeleteModal(false)}
+                style={styles.modalButton}
+              >
+                Annuler
+              </Button>
+              <Button 
+                mode="contained" 
+                onPress={handleConfirmDelete}
+                style={[styles.modalButton, styles.deleteModalButton]}
+                textColor="white"
+              >
+                Supprimer
+              </Button>
+            </View>
           </View>
         </View>
-        <View style={styles.rightContent}>
-          <Text style={styles.renewalDate}>
-            Renouvellement
-          </Text>
-          <Text style={[styles.renewalDateValue, { color: theme.colors.primary }]}>
-            {formatDate(subscription.nextBillingDate)}
-          </Text>
-        </View>
-        <TouchableOpacity 
-          onPress={handleDelete}
-          style={[styles.deleteButton, { backgroundColor: '#ff4444' + '15' }]}
-        >
-          <Icon name="delete-outline" size={20} color="#ff4444" />
-        </TouchableOpacity>
-      </Card.Content>
-    </Card>
+      </Modal>
+    </>
   );
 };
 
@@ -158,6 +199,43 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     color: '#377AF2',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    borderRadius: 16,
+    padding: 20,
+    width: '90%',
+    maxWidth: 400,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  modalText: {
+    fontSize: 16,
+    marginBottom: 20,
+    textAlign: 'center',
+    color: '#666',
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  modalButton: {
+    flex: 1,
+  },
+  deleteModalButton: {
+    backgroundColor: '#ff4444',
   },
 });
 
