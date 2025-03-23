@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
-import { TextInput, Button, Text } from 'react-native-paper';
+import { View, StyleSheet, KeyboardAvoidingView, Platform, Animated } from 'react-native';
+import { Button, Text } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types';
@@ -8,14 +8,18 @@ import { Image } from 'react-native';
 import { AlertNotificationRoot, Toast, ALERT_TYPE } from 'react-native-alert-notification';
 import { useAppDispatch, useAppSelector } from '../redux/hooks';
 import { loginUser, clearError } from '../redux/slices/authSlice';
+import CustomInput from '../components/CustomInput';
+import { TextInput } from 'react-native-paper';
 
 type LoginScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Login'>;
 };
 
 const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
-  const [email, setEmail] = useState('g@g.com');
-  const [password, setPassword] = useState('g');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const fadeAnim = React.useRef(new Animated.Value(0)).current;
+  const slideAnim = React.useRef(new Animated.Value(0)).current;
   
   const dispatch = useAppDispatch();
   const { user, loading, error } = useAppSelector((state) => state.auth);
@@ -37,6 +41,14 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
     }
   }, [error, dispatch]);
 
+  useEffect(() => {
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 1000,
+      useNativeDriver: true,
+    }).start();
+  }, []);
+
   const handleLogin = async () => {
     if (!email || !password) {
       Toast.show({
@@ -56,46 +68,51 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardAvoid}
       >
-        <View style={styles.content}>
+        <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
           <Image source={require('../../assets/Logo/SubMate_logo.png')} style={styles.logo} />
           <Text style={styles.subtitle}>Gérez vos abonnements facilement</Text>
 
-          <TextInput
-            label="Email"
-            value={email}
-            onChangeText={setEmail}
-            mode="outlined"
-            style={styles.input}
-            keyboardType="email-address"
-            autoCapitalize="none"
-          />
+          <View style={styles.formContainer}>
+            <CustomInput
+              label="Email"
+              value={email}
+              onChangeText={setEmail}
+              placeholder="Entrez votre email"
+              keyboardType="email-address"
+              right={<TextInput.Icon icon="email" color="#377AF2" />}
+              fadeAnim={fadeAnim}
+              slideAnim={slideAnim}
+            />
 
-          <TextInput
-            label="Mot de passe"
-            value={password}
-            onChangeText={setPassword}
-            mode="outlined"
-            style={styles.input}
-            secureTextEntry
-          />
+            <CustomInput
+              label="Mot de passe"
+              value={password}
+              onChangeText={setPassword}
+              placeholder="Entrez votre mot de passe"
+              secureTextEntry
+              right={<TextInput.Icon icon="lock" color="#377AF2" />}
+              fadeAnim={fadeAnim}
+              slideAnim={slideAnim}
+            />
 
-          <Button
-            mode="contained"
-            onPress={handleLogin}
-            style={styles.button}
-            loading={loading}
-          >
-            Se connecter
-          </Button>
+            <Button
+              mode="contained"
+              onPress={handleLogin}
+              style={styles.button}
+              loading={loading}
+            >
+              Se connecter
+            </Button>
 
-          <Button
-            mode="text"
-            onPress={() => navigation.navigate('Signup')}
-            style={styles.button}
-          >
-            Pas encore de compte ? S'inscrire
-          </Button>
-        </View>
+            <Button
+              mode="text"
+              onPress={() => navigation.navigate('Register')}
+              style={styles.button}
+            >
+              Pas encore de compte ? S'inscrire
+            </Button>
+          </View>
+        </Animated.View>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -114,20 +131,11 @@ const styles = StyleSheet.create({
     padding: 20,
     justifyContent: 'center',
   },
-  title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 10,
-  },
   subtitle: {
     fontSize: 16,
     textAlign: 'center',
     marginBottom: 30,
     color: '#666',
-  },
-  input: {
-    marginBottom: 15,
   },
   button: {
     marginTop: 10,
@@ -137,6 +145,19 @@ const styles = StyleSheet.create({
     height: 200,
     alignSelf: 'center',
     marginBottom: 20,
+  },
+  formContainer: {
+    padding: 20,
+    backgroundColor: '#fff',
+    borderRadius: 15,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
 });
 

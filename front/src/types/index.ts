@@ -50,6 +50,7 @@ export type RootStackParamList = {
   MainTabs: undefined;
   EditProfile: undefined;
   Support: undefined;
+  AddSubscription: undefined;
 };
 
 export type MainTabParamList = {

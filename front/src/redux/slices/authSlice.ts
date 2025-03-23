@@ -27,8 +27,8 @@ export const loginUser = createAsyncThunk(
   }
 );
 
-export const signupUser = createAsyncThunk(
-  'auth/signup',
+export const registerUser = createAsyncThunk(
+  'auth/register',
   async ({ firstname, lastname, email, password }: { firstname: string; lastname: string; email: string; password: string }) => {
     const response = await api.post('/users/register', { firstname, lastname, email, password });
     if (response.data.result) {
@@ -78,16 +78,16 @@ const authSlice = createSlice({
         state.loading = false;
         state.error = action.error.message || 'Une erreur est survenue';
       })
-      .addCase(signupUser.pending, (state) => {
+      .addCase(registerUser.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(signupUser.fulfilled, (state, action) => {
+      .addCase(registerUser.fulfilled, (state, action) => {
         state.loading = false;
         state.user = action.payload;
         state.error = null;
       })
-      .addCase(signupUser.rejected, (state, action) => {
+      .addCase(registerUser.rejected, (state, action) => {
         state.loading = false;
         state.error = action.error.message || 'Une erreur est survenue';
       })

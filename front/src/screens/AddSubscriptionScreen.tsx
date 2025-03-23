@@ -13,7 +13,7 @@ import { CATEGORIES } from '../constants/categories';
 import { CategoryKey } from '../constants/categories';
 
 type AddSubscriptionScreenProps = {
-  navigation: NativeStackNavigationProp<RootStackParamList, 'Add'>;
+  navigation: NativeStackNavigationProp<RootStackParamList, 'AddSubscription'>;
 };
 
 const initialState = {

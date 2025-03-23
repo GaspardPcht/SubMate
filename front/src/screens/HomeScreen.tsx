@@ -140,7 +140,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
       <FAB
         icon="plus"
         style={[styles.fab, { backgroundColor: theme.colors.primary }]}
-        onPress={() => navigation.getParent()?.navigate('Add')}
+        onPress={() => navigation.getParent()?.navigate('AddSubscription')}
         color={theme.colors.surface}
       />
     </SafeAreaView>
