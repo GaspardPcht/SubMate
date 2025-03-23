@@ -1,14 +1,19 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import { View, StyleSheet, Animated, ScrollView } from 'react-native';
-import { Text, Button, Avatar, List, Card, useTheme, IconButton } from 'react-native-paper';
+import { Text, Button, Avatar, List, Card, useTheme, IconButton, Switch, ActivityIndicator } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAppDispatch, useAppSelector } from '../redux/hooks';
 import { logout } from '../redux/slices/authSlice';
+import { toggleNotifications, loadUserPreferences, saveUserPreferences } from '../redux/slices/userPreferencesSlice';
+import { fetchSubscriptions } from '../redux/slices/subscriptionsSlice';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { CompositeNavigationProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MainTabParamList, RootStackParamList } from '../types';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Subscription } from '../types';
+import { ALERT_TYPE, Toast } from 'react-native-alert-notification';
+import { registerForPushNotifications, scheduleAllSubscriptionReminders, cancelAllScheduledNotificationsAsync } from '../services/notificationService';
 
 type IconName = keyof typeof MaterialCommunityIcons.glyphMap;
 
@@ -25,10 +30,11 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
   const theme = useTheme();
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
-  const { subscriptions } = useAppSelector((state) => state.subscriptions);
+  const { subscriptions, loading, error } = useAppSelector((state) => state.subscriptions);
+  const { notificationsEnabled, reminderDays } = useAppSelector((state) => state.userPreferences);
   const fadeAnim = React.useRef(new Animated.Value(0)).current;
 
-  React.useEffect(() => {
+  useEffect(() => {
     Animated.timing(fadeAnim, {
       toValue: 1,
       duration: 1000,
@@ -36,21 +42,48 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
     }).start();
   }, []);
 
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        console.log('Chargement des données du profil...');
+        if (user?._id) {
+          console.log('ID utilisateur:', user._id);
+          const result = await dispatch(fetchSubscriptions(user._id));
+          console.log('Résultat du chargement des abonnements:', result);
+        }
+      } catch (error) {
+        console.error('Erreur lors du chargement des données:', error);
+      }
+    };
+
+    loadData();
+  }, [dispatch, user?._id]);
+
+  useEffect(() => {
+    const updateNotifications = async () => {
+      if (notificationsEnabled) {
+        await scheduleAllSubscriptionReminders(subscriptions, reminderDays);
+      } else {
+        await cancelAllScheduledNotificationsAsync();
+      }
+    };
+
+    updateNotifications();
+  }, [notificationsEnabled, subscriptions, reminderDays]);
+
   const stats = useMemo(() => {
     const totalCount = subscriptions.length;
-    const monthlyTotal = subscriptions.reduce((total, sub) => {
+    const monthlyTotal = subscriptions.reduce((total: number, sub: Subscription) => {
       if (sub.billingCycle === 'monthly') {
         return total + sub.price;
       } else {
-        // Pour les abonnements annuels, on divise par 12 pour avoir le coût mensuel
         return total + (sub.price / 12);
       }
     }, 0);
-    const yearlyTotal = subscriptions.reduce((total, sub) => {
+    const yearlyTotal = subscriptions.reduce((total: number, sub: Subscription) => {
       if (sub.billingCycle === 'yearly') {
         return total + sub.price;
       } else {
-        // Pour les abonnements mensuels, on multiplie par 12 pour avoir le coût annuel
         return total + (sub.price * 12);
       }
     }, 0);
@@ -72,17 +105,52 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
     return `${user.firstname[0]}${user.lastname[0]}`;
   }, [user?.firstname, user?.lastname]);
 
-  const renderStatCard = (title: string, value: string, icon: IconName) => (
-    <Card style={styles.statCard}>
-      <Card.Content style={styles.statCardContent}>
-        <MaterialCommunityIcons name={icon} size={24} color={theme.colors.primary} />
-        <Text style={styles.statValue}>{value}</Text>
-        <Text style={styles.statLabel}>{title}</Text>
-      </Card.Content>
-    </Card>
-  );
+  const handleToggleNotifications = async () => {
+    try {
+      const newState = !notificationsEnabled;
+      console.log('Changement de l\'état des notifications vers:', newState);
+      
+      if (newState) {
+        // Si on active les notifications, on demande d'abord la permission
+        const token = await registerForPushNotifications();
+        if (!token) {
+          Toast.show({
+            type: ALERT_TYPE.DANGER,
+            title: 'Erreur',
+            textBody: 'Impossible d\'activer les notifications. Veuillez vérifier vos paramètres.'
+          });
+          return;
+        }
+      }
 
+      // Mettre à jour les préférences dans le backend
+      await dispatch(saveUserPreferences({ notificationsEnabled: newState })).unwrap();
+      
+      // Mettre à jour le state local
+      dispatch(toggleNotifications());
+      
+      if (newState) {
+        // Programmer les rappels si on active les notifications
+        await scheduleAllSubscriptionReminders(subscriptions, reminderDays);
+      } else {
+        // Annuler tous les rappels si on désactive les notifications
+        await cancelAllScheduledNotificationsAsync();
+      }
 
+      Toast.show({
+        type: ALERT_TYPE.SUCCESS,
+        title: 'Succès',
+        textBody: `Notifications ${newState ? 'activées' : 'désactivées'}`
+      });
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour des notifications:', error);
+      Toast.show({
+        type: ALERT_TYPE.DANGER,
+        title: 'Erreur',
+        textBody: 'Impossible de mettre à jour les préférences de notifications'
+      });
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -101,25 +169,43 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
 
           <Card style={styles.statsCard}>
             <Card.Content>
-              <View style={styles.statsContainer}>
-                <View style={styles.statItem}>
-                  <MaterialCommunityIcons name="credit-card-multiple" size={24} color={theme.colors.primary} />
-                  <Text style={styles.statValue}>{stats.totalCount}</Text>
-                  <Text style={styles.statLabel}>Abonnements</Text>
+              {loading ? (
+                <View style={styles.loadingContainer}>
+                  <ActivityIndicator size="large" color={theme.colors.primary} />
                 </View>
-                <View style={styles.statDivider} />
-                <View style={styles.statItem}>
-                  <MaterialCommunityIcons name="cash-multiple" size={24} color={theme.colors.primary} />
-                  <Text style={styles.statValue}>{stats.monthlyTotal}€</Text>
-                  <Text style={styles.statLabel}>Mensuel</Text>
+              ) : error ? (
+                <View style={styles.errorContainer}>
+                  <MaterialCommunityIcons name="alert-circle" size={24} color={theme.colors.error} />
+                  <Text style={styles.errorText}>{error}</Text>
+                  <Button
+                    mode="contained"
+                    onPress={() => user?._id && dispatch(fetchSubscriptions(user._id))}
+                    style={styles.retryButton}
+                  >
+                    Réessayer
+                  </Button>
                 </View>
-                <View style={styles.statDivider} />
-                <View style={styles.statItem}>
-                  <MaterialCommunityIcons name="calendar-check" size={24} color={theme.colors.primary} />
-                  <Text style={styles.statValue}>{stats.yearlyTotal}€</Text>
-                  <Text style={styles.statLabel}>Annuel</Text>
+              ) : (
+                <View style={styles.statsContainer}>
+                  <View style={styles.statItem}>
+                    <MaterialCommunityIcons name="credit-card-multiple" size={24} color={theme.colors.primary} />
+                    <Text style={styles.statValue}>{stats.totalCount}</Text>
+                    <Text style={styles.statLabel}>Abonnements</Text>
+                  </View>
+                  <View style={styles.statDivider} />
+                  <View style={styles.statItem}>
+                    <MaterialCommunityIcons name="cash-multiple" size={24} color={theme.colors.primary} />
+                    <Text style={styles.statValue}>{stats.monthlyTotal}€</Text>
+                    <Text style={styles.statLabel}>Mensuel</Text>
+                  </View>
+                  <View style={styles.statDivider} />
+                  <View style={styles.statItem}>
+                    <MaterialCommunityIcons name="calendar-check" size={24} color={theme.colors.primary} />
+                    <Text style={styles.statValue}>{stats.yearlyTotal}€</Text>
+                    <Text style={styles.statLabel}>Annuel</Text>
+                  </View>
                 </View>
-              </View>
+              )}
             </Card.Content>
           </Card>
 
@@ -135,9 +221,17 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
                 style={styles.listItem}
               />
               <List.Item
-                title="Notifications"
+                title="Notifications de rappel"
+         
                 left={props => <List.Icon {...props} icon="bell" />}
-                onPress={() => {}}
+                right={() => (
+                  <Switch
+                    value={notificationsEnabled}
+                    onValueChange={handleToggleNotifications}
+                    color={theme.colors.primary}
+                    style={styles.switch}
+                  />
+                )}
                 style={styles.listItem}
               />
               <List.Item
@@ -269,6 +363,26 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#666',
     marginTop: 4,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  errorContainer: {
+    alignItems: 'center',
+    padding: 16,
+  },
+  errorText: {
+    color: '#ff4444',
+    textAlign: 'center',
+    marginVertical: 8,
+  },
+  retryButton: {
+    marginTop: 8,
+  },
+  switch: {
+    marginRight: -8,
   },
 });
 

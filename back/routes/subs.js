@@ -1,21 +1,17 @@
 const express = require('express');
 const router = express.Router();
 const Sub = require('../models/sub');
-const User = require('../models/user');
 
 // Récupérer tous les abonnements d'un utilisateur
 router.get('/user/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
-    const user = await User.findById(userId).populate('subscriptions');
-    
-    if (!user) {
-      return res.json({ result: false, error: 'Utilisateur non trouvé' });
-    }
-    
-    res.json({ result: true, subs: user.subscriptions });
+    console.log('Recherche des abonnements pour l\'utilisateur:', userId);
+    const subscriptions = await Sub.find({ userId });
+    console.log('Abonnements trouvés:', subscriptions);
+    res.json({ result: true, subs: subscriptions });
   } catch (error) {
-    console.error('Erreur:', error);
+    console.error('Erreur lors de la récupération des abonnements:', error);
     res.json({ result: false, error: 'Erreur lors de la récupération des abonnements' });
   }
 });
@@ -24,115 +20,32 @@ router.get('/user/:userId', async (req, res) => {
 router.post('/create', async (req, res) => {
   try {
     const { name, price, billingCycle, nextBillingDate, userId } = req.body;
-    
-    if (!name || !price || !billingCycle || !userId) {
-      return res.json({ result: false, error: 'Tous les champs sont requis' });
-    }
-
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.json({ result: false, error: 'Utilisateur non trouvé' });
-    }
-
-    const subscription = new Sub({ 
-      name, 
-      price: Number(price), 
+    const subscription = new Sub({
+      name,
+      price,
       billingCycle,
       nextBillingDate,
       userId
     });
-    
-    const newSub = await subscription.save();
-    user.subscriptions.push(newSub._id);
-    await user.save();
-    
-    res.json({ result: true, sub: newSub });
+    const savedSubscription = await subscription.save();
+    res.json({ result: true, sub: savedSubscription });
   } catch (error) {
-    console.error('Erreur:', error);
     res.json({ result: false, error: 'Erreur lors de la création de l\'abonnement' });
   }
 });
 
 // Supprimer un abonnement
-router.delete('/delete/:id/:userId', async (req, res) => {
+router.delete('/delete/:subscriptionId/:userId', async (req, res) => {
   try {
-    const { id, userId } = req.params;
-
-    if (!id || !userId) {
-      return res.json({ result: false, error: 'L\'ID de l\'abonnement et de l\'utilisateur sont requis' });
-    }
-
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.json({ result: false, error: 'Utilisateur non trouvé' });
-    }
-
-    // Vérifier si l'abonnement appartient à l'utilisateur
-    const subIndex = user.subscriptions.findIndex(subId => 
-      subId.toString() === id.toString()
-    );
-    
-    if (subIndex === -1) {
-      return res.json({ result: false, error: 'Abonnement non trouvé ou non autorisé' });
-    }
-
-    // Supprimer l'abonnement
-    const deletedSub = await Sub.findByIdAndDelete(id);
-    if (!deletedSub) {
+    const { subscriptionId, userId } = req.params;
+    const subscription = await Sub.findOneAndDelete({ _id: subscriptionId, userId });
+    if (!subscription) {
       return res.json({ result: false, error: 'Abonnement non trouvé' });
     }
-
-    // Retirer l'abonnement de la liste de l'utilisateur
-    user.subscriptions.splice(subIndex, 1);
-    await user.save();
-
-    console.log('Abonnement supprimé avec succès:', {
-      deletedSub,
-      userSubscriptions: user.subscriptions
-    });
-
-    res.json({ result: true, sub: deletedSub });
+    res.json({ result: true, message: 'Abonnement supprimé avec succès' });
   } catch (error) {
-    console.error('Erreur lors de la suppression:', error);
     res.json({ result: false, error: 'Erreur lors de la suppression de l\'abonnement' });
   }
-});
-
-// Mettre à jour un abonnement
-router.put('/update/:id', (req, res) => {
-  const { id } = req.params;
-  const { name, price, billingCycle, userId } = req.body;
-
-  if (!id || !userId) {
-    return res.json({result: false, error: 'L\'ID de l\'abonnement et de l\'utilisateur sont requis'});
-  }
-
-  User.findById(userId)
-    .populate('subscriptions')
-    .then(user => {
-      if (!user) {
-        return res.json({result: false, error: 'Utilisateur non trouvé'});
-      }
-
-      // Vérifier si le nouveau nom n'existe pas déjà
-      const existingSub = user.subscriptions.find(sub => 
-        sub.name.toLowerCase() === name.toLowerCase() && sub._id.toString() !== id
-      );
-      if (existingSub) {
-        return res.json({result: false, error: 'Un abonnement avec ce nom existe déjà'});
-      }
-
-      Sub.findByIdAndUpdate(
-        id,
-        { name, price, billingCycle },
-        { new: true }
-      ).then(sub => {
-        if (!sub) {
-          return res.json({result: false, error: 'Abonnement non trouvé'});
-        }
-        res.json({result: true, sub});
-      });
-    });
 });
 
 module.exports = router;

@@ -10,23 +10,40 @@ export interface Subscription {
   _id: string;
   name: string;
   price: number;
-  billingCycle: 'monthly' | 'yearly';
-  nextBillingDate?: string;
+  billingCycle: 'monthly' | 'yearly' | 'Mensuel' | 'Annuel';
+  category: string;
   userId: string;
+  createdAt: string;
+  updatedAt: string;
+  nextBillingDate: string;
 }
 
 export interface AuthState {
-  isAuthenticated: boolean;
   user: User | null;
   loading: boolean;
   error: string | null;
 }
 
+export interface SubscriptionsState {
+  subscriptions: Subscription[];
+  loading: boolean;
+  error: string | null;
+}
+
+export interface UserPreferencesState {
+  notificationsEnabled: boolean;
+  reminderDays: number;
+}
+
+export interface RootState {
+  auth: AuthState;
+  subscriptions: SubscriptionsState;
+  userPreferences: UserPreferencesState;
+}
+
 export type RootStackParamList = {
   Login: undefined;
   Signup: undefined;
-  MainTabs: undefined;
-  Add: undefined;
   EditProfile: undefined;
 };
 

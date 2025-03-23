@@ -16,6 +16,11 @@ const SubscriptionCard: React.FC<SubscriptionCardProps> = ({ subscription, onRef
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
 
+  console.log('Rendu de SubscriptionCard:', {
+    subscription,
+    user: user?._id
+  });
+
   const handleDelete = async () => {
     if (!user?._id) {
       Toast.show({
@@ -49,16 +54,16 @@ const SubscriptionCard: React.FC<SubscriptionCardProps> = ({ subscription, onRef
   };
 
   return (
-    <Card style={styles.card}>
+    <Card style={styles.card} elevation={2}>
       <Card.Content style={styles.cardContent}>
         <View style={styles.textContainer}>
           <Text style={styles.subscriptionName}>{subscription.name}</Text>
           <Text style={styles.subscriptionPrice}>
-            {subscription.price}€ / {subscription.billingCycle === 'monthly' ? 'mois' : 'an'}
+            {subscription.price}€ / {subscription.billingCycle.toLowerCase() === 'monthly' || subscription.billingCycle === 'Mensuel' ? 'mois' : 'an'}
           </Text>
         </View>
         <TouchableOpacity onPress={handleDelete}>
-          <Icon name="close-circle" size={24} color="#000" />
+          <Icon name="close-circle" size={24} color="#666" />
         </TouchableOpacity>
       </Card.Content>
     </Card>

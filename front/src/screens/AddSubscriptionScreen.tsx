@@ -7,7 +7,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types';
 import { Toast, ALERT_TYPE } from 'react-native-alert-notification';
 import { useAppDispatch, useAppSelector } from '../redux/hooks';
-import { addSubscription } from '../redux/slices/subscriptionSlice';
+import { addSubscription } from '../redux/slices/subscriptionsSlice';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 type AddSubscriptionScreenProps = {

@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAppDispatch, useAppSelector } from '../redux/hooks';
 import { PieChart } from 'react-native-chart-kit';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { fetchSubscriptions } from '../redux/slices/subscriptionSlice';
+import { fetchSubscriptions } from '../redux/slices/subscriptionsSlice';
 
 type BillingCycle = 'monthly' | 'yearly';
 type IconName = keyof typeof MaterialCommunityIcons.glyphMap;
