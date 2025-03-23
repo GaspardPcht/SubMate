@@ -93,18 +93,21 @@ const AddSubscriptionScreen: React.FC<AddSubscriptionScreenProps> = ({ navigatio
 
   const renderInput = (label: string, value: string, onChangeText: (text: string) => void, props = {}) => (
     <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
-      <Surface style={styles.inputSurface} elevation={2}>
-        <TextInput
-          label={label}
-          value={value}
-          onChangeText={onChangeText}
-          mode="flat"
-          style={styles.input}
-          underlineColor="transparent"
-          activeUnderlineColor="transparent"
-          {...props}
-        />
-      </Surface>
+      <TextInput
+        label={label}
+        value={value}
+        onChangeText={onChangeText}
+        mode="outlined"
+        style={styles.input}
+        outlineStyle={styles.inputOutline}
+        theme={{
+          colors: {
+            primary: theme.colors.primary,
+            onSurfaceVariant: '#666',
+          },
+        }}
+        {...props}
+      />
     </Animated.View>
   );
 
@@ -123,7 +126,10 @@ const AddSubscriptionScreen: React.FC<AddSubscriptionScreenProps> = ({ navigatio
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <Animated.View style={[styles.formContainer, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
           {renderInput('Nom de l\'abonnement', formState.name, (value) => setFormState(prev => ({ ...prev, name: value })), {})}
-          {renderInput('Prix', formState.price, (value) => setFormState(prev => ({ ...prev, price: value })), { keyboardType: 'decimal-pad' })}
+          {renderInput('Prix', formState.price, (value) => setFormState(prev => ({ ...prev, price: value })), { 
+            keyboardType: 'decimal-pad',
+            right: <TextInput.Affix text="€" />
+          })}
 
           <Card style={styles.card}>
             <Card.Content>
@@ -213,8 +219,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   input: {
+    marginBottom: 16,
     backgroundColor: '#fff',
-    borderRadius: 12,
+  },
+  inputOutline: {
+    borderRadius: 8,
   },
   card: {
     marginBottom: 16,
