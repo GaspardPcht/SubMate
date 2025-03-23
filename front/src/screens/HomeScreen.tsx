@@ -99,32 +99,14 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         <FlatList
           data={subscriptions}
           renderItem={({ item }) => (
-            <View style={styles.cardContainer}>
-              <Card style={styles.card}>
-                <Card.Content>
-                  <View style={styles.cardContent}>
-                    <View>
-                      <Text style={styles.subscriptionName}>{item.name}</Text>
-                      <Text style={styles.subscriptionPrice}>
-                        {item.price}€ / {(item.billingCycle === 'monthly' || item.billingCycle === 'Mensuel') ? 'mois' : 'an'}
-                      </Text>
-                    </View>
-                    <TouchableOpacity onPress={() => {
-                      if (user?._id) {
-                        dispatch(deleteSubscription({ subscriptionId: item._id, userId: user._id }));
-                      }
-                    }}>
-                      <MaterialCommunityIcons name="delete" size={24} color="#666" />
-                    </TouchableOpacity>
-                  </View>
-                </Card.Content>
-              </Card>
-            </View>
+            <SubscriptionCard
+              subscription={item}
+              onRefresh={handleRefresh}
+            />
           )}
           keyExtractor={(item) => item._id}
-          contentContainerStyle={styles.list}
-          refreshing={loading}
-          onRefresh={handleRefresh}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
         />
       )}
 
@@ -167,28 +149,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  list: {
+  listContent: {
     padding: 16,
-  },
-  cardContainer: {
-    marginBottom: 12,
-  },
-  card: {
-    elevation: 2,
-  },
-  cardContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  subscriptionName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 4,
-  },
-  subscriptionPrice: {
-    fontSize: 16,
-    color: '#666',
   },
   emptyState: {
     flex: 1,

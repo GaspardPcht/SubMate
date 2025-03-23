@@ -1,4 +1,4 @@
-import React, { useMemo, useEffect } from 'react';
+import React, { useMemo, useEffect, useState } from 'react';
 import { View, StyleSheet, Animated, ScrollView } from 'react-native';
 import { Text, Button, Avatar, List, Card, useTheme, IconButton, Switch, ActivityIndicator } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -13,7 +13,7 @@ import { MainTabParamList, RootStackParamList } from '../types';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Subscription } from '../types';
 import { ALERT_TYPE, Toast } from 'react-native-alert-notification';
-import { registerForPushNotifications, scheduleAllSubscriptionReminders, cancelAllScheduledNotificationsAsync } from '../services/notificationService';
+import { scheduleAllSubscriptionReminders, cancelAllScheduledNotifications, testNotification } from '../services/notificationService';
 import * as Notifications from 'expo-notifications';
 
 type IconName = keyof typeof MaterialCommunityIcons.glyphMap;
@@ -37,6 +37,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
     return state.userPreferences;
   });
   const fadeAnim = React.useRef(new Animated.Value(0)).current;
+  const [loadingToggle, setLoading] = useState(false);
 
   useEffect(() => {
     Animated.timing(fadeAnim, {
@@ -64,16 +65,12 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
   }, [dispatch, user?._id]);
 
   useEffect(() => {
-    const updateNotifications = async () => {
-      if (notificationsEnabled) {
-        await scheduleAllSubscriptionReminders(subscriptions, reminderDays);
-      } else {
-        await cancelAllScheduledNotificationsAsync();
-      }
-    };
-
-    updateNotifications();
-  }, [notificationsEnabled, subscriptions, reminderDays]);
+    if (notificationsEnabled) {
+      scheduleAllSubscriptionReminders();
+    } else {
+      cancelAllScheduledNotifications();
+    }
+  }, [notificationsEnabled]);
 
   const stats = useMemo(() => {
     const totalCount = subscriptions.length;
@@ -111,45 +108,58 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
 
   const handleToggleNotifications = async () => {
     try {
-      const newState = !notificationsEnabled;
-      console.log('État actuel des notifications:', notificationsEnabled);
-      console.log('Tentative de changement vers:', newState);
-      
-      if (newState) {
-        // Si on active les notifications, on demande d'abord la permission
-        const token = await registerForPushNotifications();
-        console.log('Token de notification reçu:', token);
-        if (!token) {
+      setLoading(true);
+      if (notificationsEnabled) {
+        await cancelAllScheduledNotifications();
+        Toast.show({
+          type: ALERT_TYPE.SUCCESS,
+          title: 'Succès',
+          textBody: 'Notifications désactivées'
+        });
+      } else {
+        const { status } = await Notifications.requestPermissionsAsync();
+        if (status !== 'granted') {
           Toast.show({
             type: ALERT_TYPE.DANGER,
             title: 'Erreur',
-            textBody: 'Impossible d\'activer les notifications. Veuillez vérifier vos paramètres système.'
+            textBody: 'Les permissions de notification sont requises'
           });
           return;
         }
+        await scheduleAllSubscriptionReminders();
+        Toast.show({
+          type: ALERT_TYPE.SUCCESS,
+          title: 'Succès',
+          textBody: 'Notifications activées'
+        });
       }
-
-      // Mettre à jour le state local d'abord
       dispatch(toggleNotifications());
-      
-      // Puis sauvegarder dans le backend
-      await dispatch(saveUserPreferences({ notificationsEnabled: newState })).unwrap();
-      
-      console.log('Nouvel état des notifications après mise à jour:', newState);
-
-      Toast.show({
-        type: ALERT_TYPE.SUCCESS,
-        title: 'Succès',
-        textBody: `Notifications ${newState ? 'activées' : 'désactivées'}`
-      });
     } catch (error) {
-      console.error('Erreur lors de la mise à jour des notifications:', error);
-      // En cas d'erreur, on revient à l'état précédent
-      dispatch(toggleNotifications());
+      console.error('Erreur lors de la modification des notifications:', error);
       Toast.show({
         type: ALERT_TYPE.DANGER,
         title: 'Erreur',
-        textBody: 'Impossible de mettre à jour les préférences de notifications'
+        textBody: 'Impossible de modifier les notifications'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleTestNotification = async () => {
+    try {
+      await testNotification();
+      Toast.show({
+        type: ALERT_TYPE.SUCCESS,
+        title: 'Succès',
+        textBody: 'Notification de test envoyée'
+      });
+    } catch (error) {
+      console.error('Erreur lors du test de notification:', error);
+      Toast.show({
+        type: ALERT_TYPE.DANGER,
+        title: 'Erreur',
+        textBody: 'Impossible d\'envoyer la notification de test'
       });
     }
   };
@@ -223,21 +233,26 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
                 style={styles.listItem}
               />
               <List.Item
-                title="Notifications de rappel"
-                left={props => <List.Icon {...props} icon="bell" />}
-                right={() => {
-                  console.log('Rendu du switch avec notificationsEnabled:', notificationsEnabled);
-                  return (
-                    <Switch
-                      value={notificationsEnabled}
-                      onValueChange={handleToggleNotifications}
-                      color={notificationsEnabled ? theme.colors.primary : '#9e9e9e'}
-                      style={styles.switch}
-                    />
-                  );
-                }}
-                style={styles.listItem}
+                title="Notifications"
+                description="Recevoir des rappels pour les débits d'abonnements"
+                left={props => <List.Icon {...props} icon="bell-outline" />}
+                right={() => (
+                  <Switch
+                    value={notificationsEnabled}
+                    onValueChange={handleToggleNotifications}
+                    color={theme.colors.primary}
+                    disabled={loading}
+                  />
+                )}
               />
+              {/* <Button
+                mode="outlined"
+                onPress={handleTestNotification}
+                style={styles.button}
+                icon="bell-ring"
+              >
+                Tester les notifications
+              </Button> */}
               <List.Item
                 title="Aide et support"
                 left={props => <List.Icon {...props} icon="help-circle" />}
@@ -385,8 +400,8 @@ const styles = StyleSheet.create({
   retryButton: {
     marginTop: 8,
   },
-  switch: {
-    marginRight: -8,
+  button: {
+    marginTop: 8,
   },
 });
 
