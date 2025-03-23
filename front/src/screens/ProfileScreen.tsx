@@ -252,7 +252,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
               <List.Item
                 title="Aide et support"
                 left={props => <List.Icon {...props} icon="help-circle" />}
-                onPress={() => {}}
+                onPress={() => navigation.navigate('Support')}
                 style={styles.listItem}
               />
             </View>

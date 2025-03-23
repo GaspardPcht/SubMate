@@ -46,13 +46,15 @@ export interface RootState {
 
 export type RootStackParamList = {
   Login: undefined;
-  Signup: undefined;
+  Register: undefined;
+  MainTabs: undefined;
   EditProfile: undefined;
-  Add: undefined;
+  Support: undefined;
 };
 
 export type MainTabParamList = {
   Home: undefined;
   Budget: undefined;
   Profile: undefined;
+  Support: undefined;
 }; 

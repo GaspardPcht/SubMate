@@ -17,8 +17,13 @@ export const api = axios.create({
 api.interceptors.request.use(
   async (config) => {
     const token = await AsyncStorage.getItem('token');
+    console.log('Token from storage:', token); // Log du token
     if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+      // Ajouter le token dans le header Authorization
+      config.headers['Authorization'] = `Bearer ${token}`;
+      console.log('Headers with token:', config.headers); // Log des headers
+    } else {
+      console.log('No token found in storage'); // Log si pas de token
     }
     console.log('API Request:', {
       url: config.url,
@@ -58,6 +63,7 @@ api.interceptors.response.use(
     });
     
     if (error.response?.status === 401) {
+      console.log('Token removed due to 401 error'); // Log de suppression du token
       await AsyncStorage.removeItem('token');
       // Rediriger vers la page de connexion
       // Note: La redirection devrait être gérée au niveau de l'application

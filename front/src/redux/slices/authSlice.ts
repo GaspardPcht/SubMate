@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { User } from '../../types';
-import { apiConfig } from '../../config/api';
+import { api } from '../../services/api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface AuthState {
   user: User | null;
@@ -17,48 +18,35 @@ const initialState: AuthState = {
 export const loginUser = createAsyncThunk(
   'auth/login',
   async ({ email, password }: { email: string; password: string }) => {
-    const response = await fetch(`${apiConfig.baseURL}/users/login`, {
-      method: 'POST',
-      headers: apiConfig.headers,
-      body: JSON.stringify({ email, password }),
-    });
-    const data = await response.json();
-    if (!data.result) {
-      throw new Error(data.error);
+    const response = await api.post('/users/login', { email, password });
+    if (response.data.result) {
+      await AsyncStorage.setItem('token', response.data.token);
+      return response.data.user;
     }
-    return data.user;
+    throw new Error(response.data.error || 'Une erreur est survenue');
   }
 );
 
 export const signupUser = createAsyncThunk(
   'auth/signup',
   async ({ firstname, lastname, email, password }: { firstname: string; lastname: string; email: string; password: string }) => {
-    const response = await fetch(`${apiConfig.baseURL}/users/signup`, {
-      method: 'POST',
-      headers: apiConfig.headers,
-      body: JSON.stringify({ firstname, lastname, email, password }),
-    });
-    const data = await response.json();
-    if (!data.result) {
-      throw new Error(data.error);
+    const response = await api.post('/users/register', { firstname, lastname, email, password });
+    if (response.data.result) {
+      await AsyncStorage.setItem('token', response.data.token);
+      return response.data.user;
     }
-    return data.user;
+    throw new Error(response.data.error || 'Une erreur est survenue');
   }
 );
 
 export const updateUser = createAsyncThunk(
   'auth/update',
   async ({ userId, firstname, lastname, email, password }: { userId: string; firstname: string; lastname: string; email: string; password?: string }) => {
-    const response = await fetch(`${apiConfig.baseURL}/users/update/${userId}`, {
-      method: 'PUT',
-      headers: apiConfig.headers,
-      body: JSON.stringify({ firstname, lastname, email, ...(password && { password }) }),
-    });
-    const data = await response.json();
-    if (!data.result) {
-      throw new Error(data.error);
+    const response = await api.put(`/users/update/${userId}`, { firstname, lastname, email, ...(password && { password }) });
+    if (response.data.result) {
+      return response.data.user;
     }
-    return data.user;
+    throw new Error(response.data.error || 'Une erreur est survenue');
   }
 );
 
@@ -69,6 +57,7 @@ const authSlice = createSlice({
     logout: (state) => {
       state.user = null;
       state.error = null;
+      AsyncStorage.removeItem('token');
     },
     clearError: (state) => {
       state.error = null;

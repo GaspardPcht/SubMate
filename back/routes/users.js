@@ -1,9 +1,8 @@
 var express = require('express');
 var router = express.Router();
 const bcrypt = require('bcrypt');
-const uid2 = require('uid2');
+const jwt = require('jsonwebtoken');
 const User = require('../models/user');
-const token = uid2(32);
 
 router.get('/', (req, res) => {
   User.find().then(users => res.json({result: true, users}));
@@ -23,11 +22,17 @@ router.post('/signup', (req, res) => {
       firstname, 
       lastname, 
       email, 
-      password: hash,
-      token 
+      password: hash
     });
     
-    user.save().then(newUser => res.json({ result: true, user: newUser }));
+    user.save().then(newUser => {
+      const token = jwt.sign(
+        { userId: newUser._id },
+        process.env.JWT_SECRET,
+        { expiresIn: '24h' }
+      );
+      res.json({ result: true, user: newUser, token });
+    });
   });
 });
 
@@ -43,6 +48,12 @@ router.post('/login', (req, res) => {
       res.json({ result: false, error: 'Mot de passe incorrect' });
       return;
     }
+
+    const token = jwt.sign(
+      { userId: user._id },
+      process.env.JWT_SECRET,
+      { expiresIn: '24h' }
+    );
 
     res.json({ result: true, user, token });
   });

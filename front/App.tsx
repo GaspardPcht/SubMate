@@ -11,7 +11,7 @@ import MainTabs from './src/navigation/MainTabs';
 import AddSubscriptionScreen from './src/screens/AddSubscriptionScreen';
 import EditProfileScreen from './src/screens/EditProfileScreen';
 import { AlertNotificationRoot } from 'react-native-alert-notification';
-
+import SupportScreen from './src/screens/SupportScreen';
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 const theme = {
@@ -40,6 +40,7 @@ export default function App() {
               <Stack.Screen name="MainTabs" component={MainTabs} />
               <Stack.Screen name="Add" component={AddSubscriptionScreen} />
               <Stack.Screen name="EditProfile" component={EditProfileScreen} />
+              <Stack.Screen name="Support" component={SupportScreen} />
             </Stack.Navigator>
           </NavigationContainer>
         </AlertNotificationRoot>

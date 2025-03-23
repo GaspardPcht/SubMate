@@ -6,9 +6,9 @@ var logger = require('morgan');
 var cors = require('cors');
 require('./models/connection');
 
-var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
-var subsRouter = require('./routes/subs');
+const subscriptionRoutes = require('./routes/subs');
+const supportRoutes = require('./routes/support');
 var app = express();
 
 // Configuration CORS
@@ -24,8 +24,9 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/', indexRouter);
+// Routes API
 app.use('/users', usersRouter);
-app.use('/subs', subsRouter);
+app.use('/subs', subscriptionRoutes);
+app.use('/api/support', supportRoutes);
 
 module.exports = app;
