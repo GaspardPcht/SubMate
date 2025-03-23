@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { UserPreferencesState } from '../../types';
 
 const initialState: UserPreferencesState = {
-  notificationsEnabled: true,
+  notificationsEnabled: true, // Activé par défaut pour les nouveaux utilisateurs
   reminderDays: 1, // Nombre de jours avant le rappel
   loading: false,
   error: null,
