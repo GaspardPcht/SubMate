@@ -24,9 +24,35 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Route de test
+app.get('/', (req, res) => {
+  res.json({ message: 'API is running' });
+});
+
 // Routes API
 app.use('/users', usersRouter);
 app.use('/subs', subscriptionRoutes);
-app.use('/api/support', supportRoutes);
+app.use('/support', supportRoutes);
+
+// Gestion des erreurs 404
+app.use((req, res) => {
+  res.status(404).json({
+    error: {
+      code: '404',
+      message: 'Route not found'
+    }
+  });
+});
+
+// Gestion des erreurs
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({
+    error: {
+      code: '500',
+      message: 'Internal Server Error'
+    }
+  });
+});
 
 module.exports = app;
