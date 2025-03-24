@@ -164,13 +164,7 @@ const SupportScreen: React.FC<SupportScreenProps> = ({ navigation }) => {
             <View style={styles.faqContent}>
               <Text style={styles.faqTitle}>Questions fréquentes</Text>
               
-              <View style={styles.faqItem}>
-                <MaterialCommunityIcons name="help-circle" size={24} color={theme.colors.primary} />
-                <View style={styles.faqText}>
-                  <Text style={styles.faqQuestion}>Comment modifier un abonnement ?</Text>
-                  <Text style={styles.faqAnswer}>Appuyez sur l'abonnement dans la liste principale pour le modifier.</Text>
-                </View>
-              </View>
+      
 
               <View style={styles.faqItem}>
                 <MaterialCommunityIcons name="help-circle" size={24} color={theme.colors.primary} />
@@ -185,6 +179,14 @@ const SupportScreen: React.FC<SupportScreenProps> = ({ navigation }) => {
                 <View style={styles.faqText}>
                   <Text style={styles.faqQuestion}>Comment supprimer un abonnement ?</Text>
                   <Text style={styles.faqAnswer}>Appuyez sur l'icône de suppression à droite de l'abonnement.</Text>
+                </View>
+              </View>
+
+              <View style={styles.faqItem}>
+                <MaterialCommunityIcons name="help-circle" size={24} color={theme.colors.primary} />
+                <View style={styles.faqText}>
+                  <Text style={styles.faqQuestion}>Comment voir mes statistiques de dépenses ?</Text>
+                  <Text style={styles.faqAnswer}>Accédez à l'onglet "Budget" dans la barre de navigation inférieure pour visualiser vos dépenses mensuelles et annuelles sous forme de graphiques.</Text>
                 </View>
               </View>
             </View>

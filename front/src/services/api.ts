@@ -3,12 +3,13 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 
 // URL de base de l'API
-const BASE_URL = Constants.expoConfig?.extra?.apiUrl || 'https://submate-backend.vercel.app';
+const BASE_URL = Constants.expoConfig?.extra?.apiUrl?.replace(/\/$/, '') || 'https://sub-mate-back.vercel.app';
 
 console.log('API Configuration:', {
   baseURL: BASE_URL,
   env: process.env.NODE_ENV,
-  isDevelopment: __DEV__
+  isDevelopment: __DEV__,
+  apiUrl: Constants.expoConfig?.extra?.apiUrl
 });
 
 export const api = axios.create({
@@ -32,12 +33,18 @@ api.interceptors.request.use(
     } else {
       console.log('No token found in storage'); // Log si pas de token
     }
+    
+    // S'assurer que l'URL ne commence pas par une barre oblique
+    if (config.url?.startsWith('/')) {
+      config.url = config.url.substring(1);
+    }
+    
     console.log('API Request:', {
       url: config.url,
       method: config.method,
       headers: config.headers,
       baseURL: config.baseURL,
-      fullUrl: `${config.baseURL}${config.url}`,
+      fullUrl: `${config.baseURL}/${config.url}`,
     });
     return config;
   },
@@ -65,7 +72,7 @@ api.interceptors.response.use(
       data: error.response?.data,
       message: error.message,
       baseURL: error.config?.baseURL,
-      fullUrl: `${error.config?.baseURL}${error.config?.url}`,
+      fullUrl: `${error.config?.baseURL}/${error.config?.url}`,
       headers: error.config?.headers,
     });
     
