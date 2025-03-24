@@ -113,25 +113,23 @@ router.post('/forgot-password', async (req, res) => {
       return res.json({ result: false, error: 'Aucun utilisateur trouvé avec cet email' });
     }
 
-    console.log('Utilisateur trouvé, génération du token...');
-    // Générer un token de réinitialisation
-    const resetToken = crypto.randomBytes(32).toString('hex');
-    const resetTokenExpiry = Date.now() + 3600000; // 1 heure
+    // Générer un mot de passe aléatoire
+    const newPassword = Math.random().toString(36).slice(-8);
+    const hashedPassword = bcrypt.hashSync(newPassword, 10);
 
-    // Sauvegarder le token dans la base de données
-    user.resetPasswordToken = resetToken;
-    user.resetPasswordExpiry = resetTokenExpiry;
+    // Mettre à jour le mot de passe
+    user.password = hashedPassword;
     await user.save();
-    console.log('Token sauvegardé dans la base de données');
+    console.log('Nouveau mot de passe sauvegardé');
 
     console.log('Tentative d\'envoi de l\'email...');
-    // Envoyer l'email
-    await sendPasswordResetEmail(email, resetToken);
+    // Envoyer l'email avec le nouveau mot de passe
+    await sendPasswordResetEmail(email, newPassword);
     console.log('Email envoyé avec succès');
 
     res.json({
       result: true,
-      message: 'Un email de réinitialisation a été envoyé'
+      message: 'Un email avec votre nouveau mot de passe a été envoyé'
     });
   } catch (error) {
     console.error('Erreur détaillée lors de la demande de réinitialisation:', error);

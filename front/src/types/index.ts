@@ -51,6 +51,7 @@ export type RootStackParamList = {
   EditProfile: undefined;
   Support: undefined;
   AddSubscription: undefined;
+  ResetPassword: { token: string };
 };
 
 export type MainTabParamList = {

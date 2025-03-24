@@ -78,30 +78,23 @@ const sendSupportEmail = async (supportData) => {
   }
 };
 
-const sendPasswordResetEmail = async (email, resetToken) => {
+const sendPasswordResetEmail = async (email, newPassword) => {
   if (!process.env.EMAIL_USER || !process.env.EMAIL_APP_PASSWORD) {
     throw new Error('Configuration email manquante');
   }
 
-  if (!process.env.FRONTEND_URL) {
-    throw new Error('FRONTEND_URL manquant - nécessaire pour la réinitialisation de mot de passe');
-  }
-
   console.log('Tentative d\'envoi d\'email à:', email);
-  
-  const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
-  console.log('URL de réinitialisation:', resetUrl);
   
   const mailOptions = {
     from: `"SubMate" <${process.env.EMAIL_USER}>`,
     to: email,
-    subject: 'Réinitialisation de votre mot de passe SubMate',
+    subject: 'Votre nouveau mot de passe SubMate',
     html: `
       <h1>Réinitialisation de votre mot de passe</h1>
       <p>Vous avez demandé à réinitialiser votre mot de passe sur SubMate.</p>
-      <p>Cliquez sur le lien ci-dessous pour définir un nouveau mot de passe :</p>
-      <a href="${resetUrl}">Réinitialiser mon mot de passe</a>
-      <p>Ce lien expirera dans 1 heure.</p>
+      <p>Voici votre nouveau mot de passe :</p>
+      <p style="font-size: 20px; font-weight: bold; color: #377AF2; padding: 10px; background-color: #f5f5f5; border-radius: 5px;">${newPassword}</p>
+      <p>Pour des raisons de sécurité, nous vous recommandons de changer ce mot de passe lors de votre prochaine connexion.</p>
       <p>Si vous n'avez pas demandé cette réinitialisation, ignorez cet email.</p>
     `
   };
