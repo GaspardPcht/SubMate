@@ -3,6 +3,8 @@ var router = express.Router();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
+const crypto = require('crypto');
+const { sendPasswordResetEmail } = require('../services/emailService');
 
 router.get('/', (req, res) => {
   User.find().then(users => res.json({result: true, users}));
@@ -97,6 +99,77 @@ router.put('/update/:id', (req, res) => {
   }).catch(error => {
     res.json({ result: false, error: 'Erreur lors de la recherche de l\'utilisateur' });
   });
+});
+
+// Route pour demander une réinitialisation de mot de passe
+router.post('/forgot-password', async (req, res) => {
+  try {
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.json({ result: false, error: 'Aucun utilisateur trouvé avec cet email' });
+    }
+
+    // Générer un token de réinitialisation
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const resetTokenExpiry = Date.now() + 3600000; // 1 heure
+
+    // Sauvegarder le token dans la base de données
+    user.resetPasswordToken = resetToken;
+    user.resetPasswordExpiry = resetTokenExpiry;
+    await user.save();
+
+    // Envoyer l'email
+    await sendPasswordResetEmail(email, resetToken);
+
+    res.json({
+      result: true,
+      message: 'Un email de réinitialisation a été envoyé'
+    });
+  } catch (error) {
+    console.error('Erreur lors de la demande de réinitialisation:', error);
+    res.json({
+      result: false,
+      error: 'Une erreur est survenue lors de l\'envoi de l\'email'
+    });
+  }
+});
+
+// Route pour réinitialiser le mot de passe
+router.post('/reset-password', async (req, res) => {
+  try {
+    const { token, newPassword } = req.body;
+
+    const user = await User.findOne({
+      resetPasswordToken: token,
+      resetPasswordExpiry: { $gt: Date.now() }
+    });
+
+    if (!user) {
+      return res.json({
+        result: false,
+        error: 'Token de réinitialisation invalide ou expiré'
+      });
+    }
+
+    // Mettre à jour le mot de passe
+    user.password = bcrypt.hashSync(newPassword, 10);
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpiry = undefined;
+    await user.save();
+
+    res.json({
+      result: true,
+      message: 'Mot de passe réinitialisé avec succès'
+    });
+  } catch (error) {
+    console.error('Erreur lors de la réinitialisation du mot de passe:', error);
+    res.json({
+      result: false,
+      error: 'Une erreur est survenue lors de la réinitialisation du mot de passe'
+    });
+  }
 });
 
 module.exports = router;

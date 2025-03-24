@@ -75,4 +75,28 @@ export const getToken = async (): Promise<string | null> => {
     console.error('Erreur lors de la récupération du token:', error);
     return null;
   }
+};
+
+export const requestPasswordReset = async (email: string): Promise<{ result: boolean; message?: string; error?: string }> => {
+  try {
+    const response = await api.post('/users/forgot-password', { email });
+    return {
+      result: response.data.result,
+      message: response.data.message,
+      error: response.data.error
+    };
+  } catch (error) {
+    console.error('Erreur lors de la demande de réinitialisation du mot de passe:', error);
+    throw error;
+  }
+};
+
+export const resetPassword = async (token: string, newPassword: string): Promise<{ success: boolean; message: string }> => {
+  try {
+    const response = await api.post('/users/reset-password', { token, newPassword });
+    return response.data;
+  } catch (error) {
+    console.error('Erreur lors de la réinitialisation du mot de passe:', error);
+    throw error;
+  }
 }; 

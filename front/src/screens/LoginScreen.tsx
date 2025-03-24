@@ -10,6 +10,7 @@ import { useAppDispatch, useAppSelector } from '../redux/hooks';
 import { loginUser, clearError } from '../redux/slices/authSlice';
 import CustomInput from '../components/CustomInput';
 import { TextInput } from 'react-native-paper';
+import { requestPasswordReset } from '../services/authService';
 
 type LoginScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Login'>;
@@ -18,6 +19,7 @@ type LoginScreenProps = {
 const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const fadeAnim = React.useRef(new Animated.Value(0)).current;
   const slideAnim = React.useRef(new Animated.Value(0)).current;
   
@@ -62,6 +64,40 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
     dispatch(loginUser({ email, password }));
   };
 
+  const handleForgotPassword = async () => {
+    if (!email) {
+      Toast.show({
+        type: ALERT_TYPE.DANGER,
+        title: 'Erreur',
+        textBody: 'Veuillez entrer votre email'
+      });
+      return;
+    }
+
+    try {
+      const response = await requestPasswordReset(email);
+      if (response.result) {
+        Toast.show({
+          type: ALERT_TYPE.SUCCESS,
+          title: 'Succès',
+          textBody: response.message || 'Un email de réinitialisation a été envoyé à votre adresse'
+        });
+      } else {
+        Toast.show({
+          type: ALERT_TYPE.DANGER,
+          title: 'Erreur',
+          textBody: response.error || 'Une erreur est survenue'
+        });
+      }
+    } catch (error) {
+      Toast.show({
+        type: ALERT_TYPE.DANGER,
+        title: 'Erreur',
+        textBody: 'Une erreur est survenue lors de l\'envoi de l\'email'
+      });
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
@@ -89,11 +125,25 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
               value={password}
               onChangeText={setPassword}
               placeholder="Entrez votre mot de passe"
-              secureTextEntry
-              right={<TextInput.Icon icon="lock" color="#377AF2" />}
+              secureTextEntry={!showPassword}
+              right={
+                <TextInput.Icon 
+                  icon={showPassword ? "eye-off" : "eye"} 
+                  color="#377AF2"
+                  onPress={() => setShowPassword(!showPassword)}
+                />
+              }
               fadeAnim={fadeAnim}
               slideAnim={slideAnim}
             />
+
+            <Button
+              mode="text"
+              onPress={handleForgotPassword}
+              style={styles.forgotPasswordButton}
+            >
+              Mot de passe oublié ?
+            </Button>
 
             <Button
               mode="contained"
@@ -139,6 +189,10 @@ const styles = StyleSheet.create({
   },
   button: {
     marginTop: 10,
+  },
+  forgotPasswordButton: {
+    alignSelf: 'flex-end',
+    marginBottom: 10,
   },
   logo: {
     width: 200,
