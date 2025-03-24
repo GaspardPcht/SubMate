@@ -1,8 +1,15 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Constants from 'expo-constants';
 
 // URL de base de l'API
-const BASE_URL = 'http://192.168.1.26:3000'; // Adresse IP de votre machine de développement
+const BASE_URL = Constants.expoConfig?.extra?.apiUrl || 'https://submate-backend.vercel.app';
+
+console.log('API Configuration:', {
+  baseURL: BASE_URL,
+  env: process.env.NODE_ENV,
+  isDevelopment: __DEV__
+});
 
 export const api = axios.create({
   baseURL: BASE_URL,
