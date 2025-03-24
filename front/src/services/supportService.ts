@@ -14,7 +14,7 @@ export interface SupportRequest {
 export const submitSupportRequest = async (request: SupportRequest) => {
   try {
     console.log('Envoi de la requête de support:', request);
-    const response = await api.post('/api/support/submit', request);
+    const response = await api.post('/support/submit', request);
     console.log('Réponse du serveur:', response.data);
     return response.data;
   } catch (error) {

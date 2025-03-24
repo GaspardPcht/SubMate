@@ -8,6 +8,7 @@ import { Toast, ALERT_TYPE } from 'react-native-alert-notification';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { submitSupportRequest } from '../services/supportService';
 import { useAppSelector } from '../redux/hooks';
+import { api } from '../services/api';
 
 type SupportScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Support'>;
@@ -33,7 +34,7 @@ const SupportScreen: React.FC<SupportScreenProps> = ({ navigation }) => {
   }, []);
 
   const handleSubmit = async () => {
-    if (!title.trim() || !description.trim()) {
+    if (!supportType || !title.trim() || !description.trim()) {
       Toast.show({
         type: ALERT_TYPE.DANGER,
         title: 'Erreur',

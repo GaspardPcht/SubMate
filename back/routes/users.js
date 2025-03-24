@@ -104,13 +104,16 @@ router.put('/update/:id', (req, res) => {
 // Route pour demander une réinitialisation de mot de passe
 router.post('/forgot-password', async (req, res) => {
   try {
+    console.log('Demande de réinitialisation de mot de passe reçue pour:', req.body.email);
     const { email } = req.body;
     const user = await User.findOne({ email });
 
     if (!user) {
+      console.log('Aucun utilisateur trouvé avec cet email');
       return res.json({ result: false, error: 'Aucun utilisateur trouvé avec cet email' });
     }
 
+    console.log('Utilisateur trouvé, génération du token...');
     // Générer un token de réinitialisation
     const resetToken = crypto.randomBytes(32).toString('hex');
     const resetTokenExpiry = Date.now() + 3600000; // 1 heure
@@ -119,16 +122,20 @@ router.post('/forgot-password', async (req, res) => {
     user.resetPasswordToken = resetToken;
     user.resetPasswordExpiry = resetTokenExpiry;
     await user.save();
+    console.log('Token sauvegardé dans la base de données');
 
+    console.log('Tentative d\'envoi de l\'email...');
     // Envoyer l'email
     await sendPasswordResetEmail(email, resetToken);
+    console.log('Email envoyé avec succès');
 
     res.json({
       result: true,
       message: 'Un email de réinitialisation a été envoyé'
     });
   } catch (error) {
-    console.error('Erreur lors de la demande de réinitialisation:', error);
+    console.error('Erreur détaillée lors de la demande de réinitialisation:', error);
+    console.error('Stack trace:', error.stack);
     res.json({
       result: false,
       error: 'Une erreur est survenue lors de l\'envoi de l\'email'

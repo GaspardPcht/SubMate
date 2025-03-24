@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 
 // URL de base de l'API
-const BASE_URL = Constants.expoConfig?.extra?.apiUrl?.replace(/\/$/, '') || 'https://sub-mate-back.vercel.app';
+const BASE_URL = Constants.expoConfig?.extra?.apiUrl?.replace(/\/$/, '') || 'http://192.168.1.32:3001';
 
 console.log('API Configuration:', {
   baseURL: BASE_URL,
