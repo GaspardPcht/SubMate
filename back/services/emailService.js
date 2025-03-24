@@ -1,15 +1,36 @@
 const nodemailer = require('nodemailer');
 
+console.log('Configuration email:', {
+  user: process.env.EMAIL_USER,
+  hasPassword: !!process.env.EMAIL_PASSWORD,
+  frontendUrl: process.env.FRONTEND_URL
+});
+
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASSWORD
+  },
+  tls: {
+    rejectUnauthorized: false
+  }
+});
+
+// Vérifier la configuration du transporteur
+transporter.verify(function(error, success) {
+  if (error) {
+    console.error('Erreur de configuration du transporteur email:', error);
+  } else {
+    console.log('Serveur email prêt à envoyer des messages');
   }
 });
 
 const sendPasswordResetEmail = async (email, resetToken) => {
+  console.log('Tentative d\'envoi d\'email à:', email);
+  
   const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
+  console.log('URL de réinitialisation:', resetUrl);
   
   const mailOptions = {
     from: process.env.EMAIL_USER,
@@ -26,10 +47,12 @@ const sendPasswordResetEmail = async (email, resetToken) => {
   };
 
   try {
-    await transporter.sendMail(mailOptions);
+    console.log('Envoi de l\'email...');
+    const info = await transporter.sendMail(mailOptions);
+    console.log('Email envoyé avec succès:', info.messageId);
     return true;
   } catch (error) {
-    console.error('Erreur lors de l\'envoi de l\'email:', error);
+    console.error('Erreur détaillée lors de l\'envoi de l\'email:', error);
     throw error;
   }
 };
