@@ -5,6 +5,7 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 const crypto = require('crypto');
 const { sendPasswordResetEmail } = require('../services/emailService');
+const auth = require('../middleware/auth');
 
 router.get('/', (req, res) => {
   User.find().then(users => res.json({result: true, users}));
@@ -174,6 +175,19 @@ router.post('/reset-password', async (req, res) => {
       result: false,
       error: 'Une erreur est survenue lors de la réinitialisation du mot de passe'
     });
+  }
+});
+
+router.get('/me', auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.userData.userId).select('-password');
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'Utilisateur non trouvé' });
+    }
+    res.json({ success: true, user });
+  } catch (error) {
+    console.error('Erreur lors de la récupération de l\'utilisateur:', error);
+    res.status(500).json({ success: false, message: 'Erreur serveur' });
   }
 });
 

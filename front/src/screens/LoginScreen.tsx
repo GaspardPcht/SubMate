@@ -27,12 +27,6 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   const { user, loading, error } = useAppSelector((state) => state.auth);
 
   useEffect(() => {
-    if (user) {
-      navigation.replace('MainTabs');
-    }
-  }, [user, navigation]);
-
-  useEffect(() => {
     if (error) {
       Toast.show({
         type: ALERT_TYPE.DANGER,

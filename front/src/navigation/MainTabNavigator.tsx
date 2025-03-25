@@ -4,7 +4,6 @@ import { MainTabParamList } from '../types';
 import HomeScreen from '../screens/HomeScreen';
 import BudgetScreen from '../screens/BudgetScreen';
 import ProfileScreen from '../screens/ProfileScreen';
-import SupportScreen from '../screens/SupportScreen';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -47,15 +46,6 @@ const MainTabNavigator = () => {
         options={{
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="account" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="Support"
-        component={SupportScreen}
-        options={{
-          tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="help-circle" size={size} color={color} />
           ),
         }}
       />

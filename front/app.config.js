@@ -2,12 +2,12 @@ module.exports = {
   expo: {
     name: "SubMate",
     slug: "submate",
-    version: "1.0.0",
+    version: "1.0.1",
     orientation: "portrait",
-    icon: "./assets/icon.png",
+    icon: "./assets/Logo/SubMate_logo.png",
     userInterfaceStyle: "light",
     splash: {
-      image: "./assets/splash.png",
+      image: "./assets/Logo/SubMate_logo.png",
       resizeMode: "contain",
       backgroundColor: "#ffffff"
     },
@@ -15,19 +15,28 @@ module.exports = {
       "**/*"
     ],
     ios: {
-      supportsTablet: true
+      supportsTablet: true,
+      bundleIdentifier: "com.gaspardpcht.submate",
+      buildNumber: "2"
     },
     android: {
       adaptiveIcon: {
-        foregroundImage: "./assets/adaptive-icon.png",
-        backgroundColor: "#ffffff"
-      }
+        foregroundImage: "./assets/Logo/SubMate_logo.png",
+        backgroundColor: "#ffffff",
+        resizeMode: "center",
+        size: 512
+      },
+      package: "com.gaspardpcht.submate",
+      versionCode: 2
     },
     web: {
-      favicon: "./assets/favicon.png"
+      favicon: "./assets/Logo/SubMate_logo.png"
     },
     extra: {
-      apiUrl: process.env.EXPO_PUBLIC_API_URL
+      apiUrl: process.env.EXPO_PUBLIC_API_URL,
+      eas: {
+        projectId: "48db2498-420e-4eb9-8aa6-a8a111e814f2"
+      }
     }
   }
 }; 
