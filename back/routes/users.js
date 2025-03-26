@@ -7,6 +7,10 @@ const crypto = require('crypto');
 const { sendPasswordResetEmail } = require('../services/emailService');
 const auth = require('../middleware/auth');
 
+// Déterminer l'environnement
+const isProduction = process.env.NODE_ENV === 'production';
+const ENV_ID = isProduction ? 'prod' : 'dev';
+
 router.get('/', (req, res) => {
   User.find().then(users => res.json({result: true, users}));
 });
@@ -30,9 +34,12 @@ router.post('/signup', (req, res) => {
     
     user.save().then(newUser => {
       const token = jwt.sign(
-        { userId: newUser._id },
+        { 
+          userId: newUser._id,
+          env: ENV_ID
+        },
         process.env.JWT_SECRET,
-        { expiresIn: '24h' }
+        { noTimestamp: true }
       );
       res.json({ result: true, user: newUser, token });
     });
@@ -53,9 +60,12 @@ router.post('/login', (req, res) => {
     }
 
     const token = jwt.sign(
-      { userId: user._id },
+      { 
+        userId: user._id,
+        env: ENV_ID
+      },
       process.env.JWT_SECRET,
-      { expiresIn: '24h' }
+      { noTimestamp: true }
     );
 
     res.json({ result: true, user, token });
@@ -72,7 +82,6 @@ router.put('/update/:id', (req, res) => {
       return res.json({ result: false, error: 'Utilisateur non trouvé' });
     }
 
-    // Vérifier si le nouvel email est déjà utilisé par un autre utilisateur
     User.findOne({ email, _id: { $ne: id } }).then(existingUser => {
       if (existingUser) {
         return res.json({ result: false, error: 'Cet email est déjà utilisé' });
@@ -178,16 +187,17 @@ router.post('/reset-password', async (req, res) => {
   }
 });
 
+// Route pour vérifier l'état de la session
 router.get('/me', auth, async (req, res) => {
   try {
     const user = await User.findById(req.userData.userId).select('-password');
     if (!user) {
-      return res.status(404).json({ success: false, message: 'Utilisateur non trouvé' });
+      return res.status(404).json({ result: false, error: 'Utilisateur non trouvé' });
     }
-    res.json({ success: true, user });
+    res.json({ result: true, user });
   } catch (error) {
     console.error('Erreur lors de la récupération de l\'utilisateur:', error);
-    res.status(500).json({ success: false, message: 'Erreur serveur' });
+    res.status(500).json({ result: false, error: 'Erreur serveur' });
   }
 });
 
