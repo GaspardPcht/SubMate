@@ -34,7 +34,7 @@ export const store = configureStore({
 });
 
 export const persistor = persistStore(store, null, () => {
-  console.log('Redux Persistor initialized'); // Log pour vérifier l'initialisation
+  console.log('Redux Persistor initialized and state restored'); // Log pour vérifier la restauration
 });
 
 export type RootState = ReturnType<typeof store.getState>;

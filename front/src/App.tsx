@@ -1,28 +1,44 @@
-import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
-import { Provider as PaperProvider } from 'react-native-paper';
-import { Provider as StoreProvider } from 'react-redux';
+import React, { useState, useEffect } from 'react';
+import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
 import { store, persistor } from './redux/store';
-import AppNavigator from './navigation/AppNavigator';
+import { NavigationContainer } from '@react-navigation/native';
+import MainNavigator from './navigation/MainTabNavigator'; // Vérifiez que ce chemin est correct
+import { ActivityIndicator, View } from 'react-native';
 
-export default function App() {
-  const onBeforeLift = () => {
-  };
+const App = () => {
+  const [isReady, setIsReady] = useState(false);
+
+  useEffect(() => {
+    const restoreState = async () => {
+      try {
+        await persistor.flush(); // Attendre que l'état soit restauré
+        setIsReady(true);
+      } catch (error) {
+        console.error('Error restoring persisted state:', error);
+      }
+    };
+
+    restoreState();
+  }, []);
+
+  if (!isReady) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color="#0000ff" />
+      </View>
+    );
+  }
 
   return (
-    <StoreProvider store={store}>
-      <PersistGate 
-        loading={null} 
-        persistor={persistor}
-        onBeforeLift={onBeforeLift}
-      >
-        <PaperProvider>
-          <NavigationContainer>
-            <AppNavigator />
-          </NavigationContainer>
-        </PaperProvider>
+    <Provider store={store}>
+      <PersistGate loading={null} persistor={persistor}>
+        <NavigationContainer>
+          <MainNavigator /> {/* Vérifiez que MainNavigator est bien défini */}
+        </NavigationContainer>
       </PersistGate>
-    </StoreProvider>
+    </Provider>
   );
-} 
+};
+
+export default App;

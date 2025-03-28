@@ -26,6 +26,7 @@ api.interceptors.request.use(
   async (config) => {
     const token = await AsyncStorage.getItem('token');
     console.log('Token from storage:', token); // Log du token récupéré
+    console.log('Token from storage (iPhone):', token); // Log pour vérifier sur iPhone
     if (token) {
       config.headers.Authorization = `Bearer ${token}`; // Ajouter le token dans le header Authorization
     }
