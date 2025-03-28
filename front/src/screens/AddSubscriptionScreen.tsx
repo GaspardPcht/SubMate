@@ -17,6 +17,7 @@ type AddSubscriptionScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'AddSubscription'>;
 };
 
+
 const initialState = {
   name: '',
   price: '',
@@ -36,6 +37,7 @@ const AddSubscriptionScreen: React.FC<AddSubscriptionScreenProps> = ({ navigatio
   const [category, setCategory] = useState<CategoryKey>('other');
   const [showCategories, setShowCategories] = useState(false);
   const scaleAnim = React.useRef(new Animated.Value(1)).current;
+
 
   useEffect(() => {
     Animated.parallel([
