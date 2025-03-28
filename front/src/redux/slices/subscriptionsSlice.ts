@@ -52,9 +52,7 @@ export const fetchSubscriptions = createAsyncThunk(
   'subscriptions/fetchSubscriptions',
   async (userId: string) => {
     try {
-      console.log('Fetching subscriptions for user:', userId);
       const response = await api.get(`/subs/user/${userId}`);
-      console.log('Subscriptions response:', response.data);
       
       if (!response.data || !response.data.result) {
         throw new Error('Format de réponse invalide');
@@ -182,12 +180,10 @@ const subscriptionsSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(fetchSubscriptions.pending, (state) => {
-        console.log('Chargement des abonnements en cours...');
         state.loading = true;
         state.error = null;
       })
       .addCase(fetchSubscriptions.fulfilled, (state, action) => {
-        console.log('Abonnements reçus dans le reducer:', action.payload);
         state.loading = false;
         // Éviter les doublons en utilisant un Map
         const uniqueSubscriptions = new Map(
@@ -195,10 +191,8 @@ const subscriptionsSlice = createSlice({
         );
         state.subscriptions = Array.from(uniqueSubscriptions.values()) as Subscription[];
         state.error = null;
-        console.log('Nouvel état des abonnements dans le store:', state.subscriptions);
       })
       .addCase(fetchSubscriptions.rejected, (state, action) => {
-        console.log('Erreur lors du chargement des abonnements:', action.error);
         state.loading = false;
         state.error = action.error.message || 'Une erreur est survenue';
       })

@@ -8,7 +8,6 @@ import AppNavigator from './navigation/AppNavigator';
 
 export default function App() {
   const onBeforeLift = () => {
-    console.log('Redux Persist - Avant restauration...');
   };
 
   return (

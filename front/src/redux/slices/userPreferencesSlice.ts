@@ -44,17 +44,11 @@ const userPreferencesSlice = createSlice({
       state.error = action.payload;
     },
     toggleNotifications: (state) => {
-      console.log('toggleNotifications - État actuel:', state.notificationsEnabled);
       state.notificationsEnabled = !state.notificationsEnabled;
-      console.log('toggleNotifications - Nouvel état:', state.notificationsEnabled);
-      
-      // Sauvegarder immédiatement dans AsyncStorage
       AsyncStorage.setItem('userPreferences', JSON.stringify({
         ...state,
         notificationsEnabled: state.notificationsEnabled
-      })).catch(error => {
-        console.error('Erreur lors de la sauvegarde des préférences:', error);
-      });
+      })).catch(() => {});
     },
     setReminderDays: (state, action: PayloadAction<number>) => {
       state.reminderDays = action.payload;
@@ -78,19 +72,14 @@ const userPreferencesSlice = createSlice({
         state.error = action.payload as string;
       })
       .addCase(saveUserPreferences.pending, (state) => {
-        console.log('saveUserPreferences.pending - État actuel:', state);
         state.loading = true;
         state.error = null;
       })
       .addCase(saveUserPreferences.fulfilled, (state, action) => {
-        console.log('saveUserPreferences.fulfilled - Payload reçu:', action.payload);
         state.loading = false;
-        // Ne pas mettre à jour l'état des notifications ici car il est déjà géré par toggleNotifications
         state.error = null;
-        console.log('saveUserPreferences.fulfilled - Nouvel état:', state);
       })
       .addCase(saveUserPreferences.rejected, (state, action) => {
-        console.log('saveUserPreferences.rejected - Erreur:', action.payload);
         state.loading = false;
         state.error = action.payload as string;
       });

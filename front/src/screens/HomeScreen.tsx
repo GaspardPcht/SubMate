@@ -58,7 +58,6 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     const loadData = async () => {
       if (user?._id) {
         try {
-          console.log('Chargement des abonnements pour l\'utilisateur:', user._id);
           await dispatch(fetchSubscriptions(user._id));
         } catch (error) {
           console.error('Erreur lors du chargement des abonnements:', error);

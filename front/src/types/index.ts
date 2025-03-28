@@ -36,6 +36,8 @@ export interface SubscriptionsState {
 export interface UserPreferencesState {
   notificationsEnabled: boolean;
   reminderDays: number;
+  loading: boolean;
+  error: string | null;
 }
 
 export interface RootState {

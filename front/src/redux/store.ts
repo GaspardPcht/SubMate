@@ -9,10 +9,10 @@ import userPreferencesReducer from './slices/userPreferencesSlice';
 const persistConfig = {
   key: 'root',
   storage: AsyncStorage,
-  whitelist: ['auth'],
+  whitelist: ['auth'], // Assurez-vous que 'auth' est bien dans la whitelist
   blacklist: ['_persist'],
   timeout: 0,
-  debug: true
+  debug: true, // Activez les logs pour vérifier le comportement de redux-persist
 };
 
 const rootReducer = combineReducers({
@@ -34,9 +34,8 @@ export const store = configureStore({
 });
 
 export const persistor = persistStore(store, null, () => {
-  console.log('Persistor - Restauration terminée');
-  console.log('État après restauration:', store.getState());
+  console.log('Redux Persistor initialized'); // Log pour vérifier l'initialisation
 });
 
 export type RootState = ReturnType<typeof store.getState>;
-export type AppDispatch = typeof store.dispatch; 
+export type AppDispatch = typeof store.dispatch;

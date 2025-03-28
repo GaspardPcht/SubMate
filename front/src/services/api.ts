@@ -25,31 +25,14 @@ export const api = axios.create({
 api.interceptors.request.use(
   async (config) => {
     const token = await AsyncStorage.getItem('token');
-    console.log('Token from storage:', token); // Log du token
+    console.log('Token from storage:', token); // Log du token récupéré
     if (token) {
-      // Ajouter le token dans le header Authorization
-      config.headers['Authorization'] = `Bearer ${token}`;
-      console.log('Headers with token:', config.headers); // Log des headers
-    } else {
-      console.log('No token found in storage'); // Log si pas de token
+      config.headers.Authorization = `Bearer ${token}`; // Ajouter le token dans le header Authorization
     }
-    
-    // S'assurer que l'URL ne commence pas par une barre oblique
-    if (config.url?.startsWith('/')) {
-      config.url = config.url.substring(1);
-    }
-    
-    console.log('API Request:', {
-      url: config.url,
-      method: config.method,
-      headers: config.headers,
-      baseURL: config.baseURL,
-      fullUrl: `${config.baseURL}/${config.url}`,
-    });
     return config;
   },
   (error) => {
-    console.error('API Request Error:', error);
+    console.error('Error in request interceptor:', error); // Log des erreurs
     return Promise.reject(error);
   }
 );
@@ -84,4 +67,4 @@ api.interceptors.response.use(
     }
     return Promise.reject(error);
   }
-); 
+);
