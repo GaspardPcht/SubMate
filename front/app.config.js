@@ -37,6 +37,12 @@ module.exports = {
       eas: {
         projectId: "48db2498-420e-4eb9-8aa6-a8a111e814f2"
       }
+    },
+    updates: {
+      url: "https://u.expo.dev/48db2498-420e-4eb9-8aa6-a8a111e814f2"
+    },
+    runtimeVersion: {
+      policy: "appVersion"
     }
   }
 }; 
