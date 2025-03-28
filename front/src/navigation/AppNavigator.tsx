@@ -7,23 +7,25 @@ import MainTabNavigator from './MainTabNavigator';
 import EditProfileScreen from '../screens/EditProfileScreen';
 import SupportScreen from '../screens/SupportScreen';
 import ResetPasswordScreen from '../screens/ResetPasswordScreen';
-import { useAppSelector } from '../redux/hooks';
+import { useAppSelector, useAppDispatch } from '../redux/hooks';
 import { View, ActivityIndicator } from 'react-native';
+import { restoreToken } from '../redux/slices/authSlice';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 const AppNavigator = () => {
+  const dispatch = useAppDispatch();
   const { token, loading } = useAppSelector((state) => state.auth);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Simuler un temps de chargement pour la persistance
-    const timer = setTimeout(() => {
+    const initializeAuth = async () => {
+      await dispatch(restoreToken());
       setIsLoading(false);
-    }, 1000);
+    };
 
-    return () => clearTimeout(timer);
-  }, []);
+    initializeAuth();
+  }, [dispatch]);
 
   if (isLoading || loading) {
     return (

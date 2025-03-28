@@ -17,6 +17,27 @@ const initialState: AuthState = {
   error: null,
 };
 
+export const restoreToken = createAsyncThunk(
+  'auth/restoreToken',
+  async () => {
+    const token = await AsyncStorage.getItem('token');
+    if (token) {
+      // Optionnel : Vérifier si le token est valide avec une requête API
+      try {
+        const response = await api.get('/users/me', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        return { token, user: response.data.user };
+      } catch (error) {
+        // Si le token n'est pas valide, on le supprime
+        await AsyncStorage.removeItem('token');
+        return null;
+      }
+    }
+    return null;
+  }
+);
+
 export const loginUser = createAsyncThunk(
   'auth/login',
   async ({ email, password }: { email: string; password: string }) => {
@@ -68,6 +89,21 @@ const authSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      .addCase(restoreToken.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(restoreToken.fulfilled, (state, action) => {
+        state.loading = false;
+        if (action.payload) {
+          state.token = action.payload.token;
+          state.user = action.payload.user;
+        }
+      })
+      .addCase(restoreToken.rejected, (state) => {
+        state.loading = false;
+        state.token = null;
+        state.user = null;
+      })
       .addCase(loginUser.pending, (state) => {
         state.loading = true;
         state.error = null;
