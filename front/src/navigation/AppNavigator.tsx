@@ -10,6 +10,7 @@ import ResetPasswordScreen from '../screens/ResetPasswordScreen';
 import { useAppSelector, useAppDispatch } from '../redux/hooks';
 import { View, ActivityIndicator } from 'react-native';
 import { restoreToken } from '../redux/slices/authSlice';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -17,14 +18,37 @@ const AppNavigator = () => {
   const dispatch = useAppDispatch();
   const { token, loading } = useAppSelector((state) => state.auth);
   const [isLoading, setIsLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    const initializeAuth = async () => {
-      await dispatch(restoreToken());
-      setIsLoading(false);
+    const checkAuth = async () => {
+      try {
+        // Vérifier d'abord si un token existe dans AsyncStorage
+        const storedToken = await AsyncStorage.getItem('token');
+        console.log('Stored token:', storedToken);
+        
+        if (storedToken) {
+          // Si un token existe, on essaie de le restaurer
+          const result = await dispatch(restoreToken());
+          console.log('Restore token result:', result);
+          
+          if (result.payload) {
+            setIsAuthenticated(true);
+          } else {
+            setIsAuthenticated(false);
+          }
+        } else {
+          setIsAuthenticated(false);
+        }
+      } catch (error) {
+        console.error('Auth check error:', error);
+        setIsAuthenticated(false);
+      } finally {
+        setIsLoading(false);
+      }
     };
 
-    initializeAuth();
+    checkAuth();
   }, [dispatch]);
 
   if (isLoading || loading) {
@@ -40,7 +64,7 @@ const AppNavigator = () => {
       screenOptions={{
         headerShown: false,
       }}
-      initialRouteName={token ? 'MainTabs' : 'Login'}
+      initialRouteName={isAuthenticated ? 'MainTabs' : 'Login'}
     >
       <Stack.Screen name="Login" component={LoginScreen} />
       <Stack.Screen name="Register" component={RegisterScreen} />
