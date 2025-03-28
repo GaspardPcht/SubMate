@@ -1,42 +1,26 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { User } from '../../types';
 import { api } from '../../services/api';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface AuthState {
-  user: User | null;
   token: string | null;
+  user: User | null;
   loading: boolean;
   error: string | null;
 }
 
 const initialState: AuthState = {
-  user: null,
   token: null,
-  loading: false,
+  user: null,
+  loading: true,
   error: null,
 };
 
-export const restoreToken = createAsyncThunk(
-  'auth/restoreToken',
-  async () => {
-    const token = await AsyncStorage.getItem('token');
-    if (token) {
-      // Optionnel : Vérifier si le token est valide avec une requête API
-      try {
-        const response = await api.get('/users/me', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        return { token, user: response.data.user };
-      } catch (error) {
-        // Si le token n'est pas valide, on le supprime
-        await AsyncStorage.removeItem('token');
-        return null;
-      }
-    }
-    return null;
-  }
-);
+export const restoreToken = createAsyncThunk('auth/restoreToken', async () => {
+  const token = await AsyncStorage.getItem('token');
+  return token;
+});
 
 export const loginUser = createAsyncThunk(
   'auth/login',
@@ -44,7 +28,7 @@ export const loginUser = createAsyncThunk(
     const response = await api.post('/users/login', { email, password });
     if (response.data.result) {
       await AsyncStorage.setItem('token', response.data.token);
-      return { user: response.data.user, token: response.data.token };
+      return { token: response.data.token, user: response.data.user };
     }
     throw new Error(response.data.error || 'Une erreur est survenue');
   }
@@ -56,7 +40,7 @@ export const registerUser = createAsyncThunk(
     const response = await api.post('/users/signup', { firstname, lastname, email, password });
     if (response.data.result) {
       await AsyncStorage.setItem('token', response.data.token);
-      return { user: response.data.user, token: response.data.token };
+      return { token: response.data.token, user: response.data.user };
     }
     throw new Error(response.data.error || 'Une erreur est survenue');
   }
@@ -78,8 +62,8 @@ const authSlice = createSlice({
   initialState,
   reducers: {
     logout: (state) => {
-      state.user = null;
       state.token = null;
+      state.user = null;
       state.error = null;
       AsyncStorage.removeItem('token');
     },
@@ -93,16 +77,11 @@ const authSlice = createSlice({
         state.loading = true;
       })
       .addCase(restoreToken.fulfilled, (state, action) => {
+        state.token = action.payload;
         state.loading = false;
-        if (action.payload) {
-          state.token = action.payload.token;
-          state.user = action.payload.user;
-        }
       })
       .addCase(restoreToken.rejected, (state) => {
         state.loading = false;
-        state.token = null;
-        state.user = null;
       })
       .addCase(loginUser.pending, (state) => {
         state.loading = true;
@@ -110,8 +89,8 @@ const authSlice = createSlice({
       })
       .addCase(loginUser.fulfilled, (state, action) => {
         state.loading = false;
-        state.user = action.payload.user;
         state.token = action.payload.token;
+        state.user = action.payload.user;
         state.error = null;
       })
       .addCase(loginUser.rejected, (state, action) => {
@@ -124,8 +103,8 @@ const authSlice = createSlice({
       })
       .addCase(registerUser.fulfilled, (state, action) => {
         state.loading = false;
-        state.user = action.payload.user;
         state.token = action.payload.token;
+        state.user = action.payload.user;
         state.error = null;
       })
       .addCase(registerUser.rejected, (state, action) => {
