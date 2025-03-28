@@ -5,12 +5,14 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface AuthState {
   user: User | null;
+  token: string | null;
   loading: boolean;
   error: string | null;
 }
 
 const initialState: AuthState = {
   user: null,
+  token: null,
   loading: false,
   error: null,
 };
@@ -21,7 +23,7 @@ export const loginUser = createAsyncThunk(
     const response = await api.post('/users/login', { email, password });
     if (response.data.result) {
       await AsyncStorage.setItem('token', response.data.token);
-      return response.data.user;
+      return { user: response.data.user, token: response.data.token };
     }
     throw new Error(response.data.error || 'Une erreur est survenue');
   }
@@ -33,7 +35,7 @@ export const registerUser = createAsyncThunk(
     const response = await api.post('/users/signup', { firstname, lastname, email, password });
     if (response.data.result) {
       await AsyncStorage.setItem('token', response.data.token);
-      return response.data.user;
+      return { user: response.data.user, token: response.data.token };
     }
     throw new Error(response.data.error || 'Une erreur est survenue');
   }
@@ -56,6 +58,7 @@ const authSlice = createSlice({
   reducers: {
     logout: (state) => {
       state.user = null;
+      state.token = null;
       state.error = null;
       AsyncStorage.removeItem('token');
     },
@@ -71,7 +74,8 @@ const authSlice = createSlice({
       })
       .addCase(loginUser.fulfilled, (state, action) => {
         state.loading = false;
-        state.user = action.payload;
+        state.user = action.payload.user;
+        state.token = action.payload.token;
         state.error = null;
       })
       .addCase(loginUser.rejected, (state, action) => {
@@ -84,7 +88,8 @@ const authSlice = createSlice({
       })
       .addCase(registerUser.fulfilled, (state, action) => {
         state.loading = false;
-        state.user = action.payload;
+        state.user = action.payload.user;
+        state.token = action.payload.token;
         state.error = null;
       })
       .addCase(registerUser.rejected, (state, action) => {
