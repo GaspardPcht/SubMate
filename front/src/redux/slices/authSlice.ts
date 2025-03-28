@@ -58,7 +58,11 @@ export const loginUser = createAsyncThunk(
       // Vérifier que le token a bien été stocké
       const storedToken = await AsyncStorage.getItem('token');
       console.log('Token vérifié après stockage:', storedToken);
-      return { token: response.data.token, user: response.data.user };
+      
+      // Dispatch le token et les données utilisateur dans le store
+      const payload = { token: response.data.token, user: response.data.user };
+      console.log('Dispatch des données dans le store:', payload);
+      return payload;
     }
     throw new Error(response.data.error || 'Une erreur est survenue');
   }
@@ -69,8 +73,16 @@ export const registerUser = createAsyncThunk(
   async ({ firstname, lastname, email, password }: { firstname: string; lastname: string; email: string; password: string }) => {
     const response = await api.post('/users/signup', { firstname, lastname, email, password });
     if (response.data.result) {
+      console.log('Stockage du token après inscription:', response.data.token);
       await AsyncStorage.setItem('token', response.data.token);
-      return { token: response.data.token, user: response.data.user };
+      // Vérifier que le token a bien été stocké
+      const storedToken = await AsyncStorage.getItem('token');
+      console.log('Token vérifié après stockage:', storedToken);
+      
+      // Dispatch le token et les données utilisateur dans le store
+      const payload = { token: response.data.token, user: response.data.user };
+      console.log('Dispatch des données dans le store:', payload);
+      return payload;
     }
     throw new Error(response.data.error || 'Une erreur est survenue');
   }
@@ -129,6 +141,7 @@ const authSlice = createSlice({
         state.error = null;
       })
       .addCase(loginUser.fulfilled, (state, action) => {
+        console.log('Login fulfilled - Mise à jour du state:', action.payload);
         state.loading = false;
         state.token = action.payload.token;
         state.user = action.payload.user;
@@ -143,6 +156,7 @@ const authSlice = createSlice({
         state.error = null;
       })
       .addCase(registerUser.fulfilled, (state, action) => {
+        console.log('Register fulfilled - Mise à jour du state:', action.payload);
         state.loading = false;
         state.token = action.payload.token;
         state.user = action.payload.user;
