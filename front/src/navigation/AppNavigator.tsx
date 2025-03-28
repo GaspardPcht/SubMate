@@ -18,10 +18,25 @@ const AppNavigator = () => {
   const { token, loading } = useAppSelector((state) => state.auth);
 
   useEffect(() => {
-    dispatch(restoreToken());
-  }, [dispatch]);
+    console.log('AppNavigator - Initialisation...');
+    console.log('État initial - Token:', token);
+    console.log('État initial - Loading:', loading);
+    
+    // Vérifier si le token existe dans le store
+    if (!token) {
+      console.log('AppNavigator - Aucun token trouvé, tentative de restauration...');
+      dispatch(restoreToken());
+    } else {
+      console.log('AppNavigator - Token déjà présent:', token);
+    }
+    
+    return () => {
+      console.log('AppNavigator - Nettoyage...');
+    };
+  }, [dispatch, token]);
 
   if (loading) {
+    console.log('AppNavigator - Affichage du loader...');
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <ActivityIndicator size="large" color="#377AF2" />
@@ -29,6 +44,7 @@ const AppNavigator = () => {
     );
   }
 
+  console.log('AppNavigator - Rendu principal, token présent:', !!token);
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       {token ? (

@@ -7,9 +7,17 @@ import { store, persistor } from './redux/store';
 import AppNavigator from './navigation/AppNavigator';
 
 export default function App() {
+  const onBeforeLift = () => {
+    console.log('Redux Persist - Avant restauration...');
+  };
+
   return (
     <StoreProvider store={store}>
-      <PersistGate loading={null} persistor={persistor}>
+      <PersistGate 
+        loading={null} 
+        persistor={persistor}
+        onBeforeLift={onBeforeLift}
+      >
         <PaperProvider>
           <NavigationContainer>
             <AppNavigator />

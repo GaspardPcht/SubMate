@@ -17,7 +17,7 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.submate.app",
+      "bundleIdentifier": "com.gaspardpcht.submate",
       "infoPlist": {
         "UIBackgroundModes": [
           "remote-notification"
