@@ -150,6 +150,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
+    paddingBottom: 20
   },
   header: {
     padding: 16,
@@ -214,8 +215,9 @@ const styles = StyleSheet.create({
   fab: {
     position: 'absolute',
     right: 16,
-    bottom: 16,
+    bottom: 96,
     borderRadius: 28,
+    elevation: 5,
   },
 });
 
