@@ -202,7 +202,7 @@ router.get('/me', auth, async (req, res) => {
 });
 
 // Route pour supprimer un utilisateur
-router.delete('/:id', auth, async (req, res) => {
+router.delete('/delete/:id', auth, async (req, res) => {
   try {
     const { id } = req.params;
     
