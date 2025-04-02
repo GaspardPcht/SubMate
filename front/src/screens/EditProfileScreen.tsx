@@ -9,7 +9,8 @@ import { useAppDispatch, useAppSelector } from '../redux/hooks';
 import { updateUser, logout } from '../redux/slices/authSlice';
 import CustomInput from '../components/CustomInput';
 import { TextInput } from 'react-native-paper';
-import { API_URL } from '@env';
+import { EXPO_PUBLIC_API_URL } from '@env';
+import { api } from '../services/api';
 
 type EditProfileScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'EditProfile'>;
@@ -18,7 +19,7 @@ type EditProfileScreenProps = {
 const EditProfileScreen: React.FC<EditProfileScreenProps> = ({ navigation }) => {
   const theme = useTheme();
   const dispatch = useAppDispatch();
-  const { user, loading } = useAppSelector((state: RootState) => state.auth);
+  const { user, loading, token } = useAppSelector((state: RootState) => state.auth);
   const [firstname, setFirstname] = useState(user?.firstname || '');
   const [lastname, setLastname] = useState(user?.lastname || '');
   const [email, setEmail] = useState(user?.email || '');
@@ -92,17 +93,34 @@ const EditProfileScreen: React.FC<EditProfileScreenProps> = ({ navigation }) => 
   };
 
   const handleDeleteAccount = async () => {
-    if (!user?._id) return;
+    if (!user?._id || !token) {
+      Toast.show({
+        type: ALERT_TYPE.DANGER,
+        title: 'Erreur',
+        textBody: 'Impossible de supprimer le compte : session invalide'
+      });
+      return;
+    }
 
     try {
-      const response = await fetch(`${API_URL}/users/${user._id}`, {
+      console.log('Tentative de suppression du compte...');
+      console.log('User ID:', user._id);
+      console.log('Token:', token);
+      console.log('URL:', `${EXPO_PUBLIC_API_URL}/users/delete/${user._id}`);
+
+      const response = await fetch(`${EXPO_PUBLIC_API_URL}/users/delete/${user._id}`, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${user.token}`
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         }
       });
 
+      console.log('Réponse du serveur:', response.status);
+      console.log('Headers de la réponse:', response.headers);
+      
       const data = await response.json();
+      console.log('Données reçues:', data);
 
       if (data.result) {
         await dispatch(logout());
@@ -116,13 +134,18 @@ const EditProfileScreen: React.FC<EditProfileScreenProps> = ({ navigation }) => 
           routes: [{ name: 'Login' }],
         });
       } else {
-        throw new Error(data.error);
+        throw new Error(data.error || 'Une erreur est survenue lors de la suppression du compte');
       }
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Erreur lors de la suppression:', error);
+      console.error('Détails de l\'erreur:', {
+        message: error?.message,
+        stack: error?.stack
+      });
       Toast.show({
         type: ALERT_TYPE.DANGER,
         title: 'Erreur',
-        textBody: 'Une erreur est survenue lors de la suppression du compte'
+        textBody: error?.message || 'Une erreur est survenue lors de la suppression du compte'
       });
     }
   };

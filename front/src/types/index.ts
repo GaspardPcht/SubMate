@@ -119,6 +119,7 @@ declare module 'react-native-alert-notification' {
 
 declare module '@env' {
   export const API_URL: string;
+  export const EXPO_PUBLIC_API_URL: string;
 }
 
 export interface User {
@@ -145,6 +146,7 @@ export interface AuthState {
   user: User | null;
   loading: boolean;
   error: string | null;
+  token: string | null;
 }
 
 export interface SubscriptionsState {
