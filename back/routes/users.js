@@ -201,4 +201,31 @@ router.get('/me', auth, async (req, res) => {
   }
 });
 
+// Route pour supprimer un utilisateur
+router.delete('/:id', auth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Vérifier si l'utilisateur existe
+    const user = await User.findById(id);
+    if (!user) {
+      return res.json({ result: false, error: 'Utilisateur non trouvé' });
+    }
+
+    // Supprimer l'utilisateur
+    await User.findByIdAndDelete(id);
+    
+    res.json({ 
+      result: true, 
+      message: 'Utilisateur supprimé avec succès' 
+    });
+  } catch (error) {
+    console.error('Erreur lors de la suppression de l\'utilisateur:', error);
+    res.json({ 
+      result: false, 
+      error: 'Une erreur est survenue lors de la suppression de l\'utilisateur' 
+    });
+  }
+});
+
 module.exports = router;

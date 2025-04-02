@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Animated } from 'react-native';
-import { Button, Text, useTheme, IconButton, Surface } from 'react-native-paper';
+import { Button, Text, useTheme, IconButton, Surface, Portal, Dialog } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../types';
+import { RootStackParamList, RootState } from '../types';
 import { Toast, ALERT_TYPE } from 'react-native-alert-notification';
 import { useAppDispatch, useAppSelector } from '../redux/hooks';
-import { updateUser } from '../redux/slices/authSlice';
+import { updateUser, logout } from '../redux/slices/authSlice';
 import CustomInput from '../components/CustomInput';
 import { TextInput } from 'react-native-paper';
+import { API_URL } from '@env';
 
 type EditProfileScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'EditProfile'>;
@@ -17,7 +18,7 @@ type EditProfileScreenProps = {
 const EditProfileScreen: React.FC<EditProfileScreenProps> = ({ navigation }) => {
   const theme = useTheme();
   const dispatch = useAppDispatch();
-  const { user, loading } = useAppSelector((state) => state.auth);
+  const { user, loading } = useAppSelector((state: RootState) => state.auth);
   const [firstname, setFirstname] = useState(user?.firstname || '');
   const [lastname, setLastname] = useState(user?.lastname || '');
   const [email, setEmail] = useState(user?.email || '');
@@ -25,6 +26,7 @@ const EditProfileScreen: React.FC<EditProfileScreenProps> = ({ navigation }) => 
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const fadeAnim = React.useRef(new Animated.Value(0)).current;
   const slideAnim = React.useRef(new Animated.Value(0)).current;
 
@@ -85,6 +87,42 @@ const EditProfileScreen: React.FC<EditProfileScreenProps> = ({ navigation }) => 
         type: ALERT_TYPE.DANGER,
         title: 'Erreur',
         textBody: 'Une erreur est survenue lors de la mise à jour du profil'
+      });
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!user?._id) return;
+
+    try {
+      const response = await fetch(`${API_URL}/users/${user._id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${user.token}`
+        }
+      });
+
+      const data = await response.json();
+
+      if (data.result) {
+        await dispatch(logout());
+        Toast.show({
+          type: ALERT_TYPE.SUCCESS,
+          title: 'Succès',
+          textBody: 'Votre compte a été supprimé avec succès'
+        });
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'Login' }],
+        });
+      } else {
+        throw new Error(data.error);
+      }
+    } catch (error) {
+      Toast.show({
+        type: ALERT_TYPE.DANGER,
+        title: 'Erreur',
+        textBody: 'Une erreur est survenue lors de la suppression du compte'
       });
     }
   };
@@ -185,7 +223,32 @@ const EditProfileScreen: React.FC<EditProfileScreenProps> = ({ navigation }) => 
             </Button>
           </Animated.View>
         </ScrollView>
+
+        <View style={styles.deleteSection}>
+          <Button
+            mode="outlined"
+            onPress={() => setShowDeleteDialog(true)}
+            style={styles.deleteButton}
+            textColor="#FF4444"
+            icon="delete"
+          >
+            Supprimer mon compte
+          </Button>
+        </View>
       </KeyboardAvoidingView>
+
+      <Portal>
+        <Dialog visible={showDeleteDialog} onDismiss={() => setShowDeleteDialog(false)}>
+          <Dialog.Title>Supprimer le compte</Dialog.Title>
+          <Dialog.Content>
+            <Text>Êtes-vous sûr de vouloir supprimer votre compte ? Cette action est irréversible.</Text>
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={() => setShowDeleteDialog(false)}>Annuler</Button>
+            <Button onPress={handleDeleteAccount} textColor="#FF4444">Supprimer</Button>
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
     </SafeAreaView>
   );
 };
@@ -231,6 +294,20 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
     marginBottom: 16,
+  },
+  deleteSection: {
+    padding: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#E0E0E0',
+  },
+  deleteTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#FF4444',
+    marginBottom: 16,
+  },
+  deleteButton: {
+    borderColor: '#FF4444',
   },
 });
 

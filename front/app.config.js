@@ -2,7 +2,7 @@ module.exports = {
   expo: {
     name: "SubMate",
     slug: "submate",
-    version: "1.0.4",
+    version: "1.0.5",
     orientation: "portrait",
     icon: "./assets/Logo/SubMate_logo.png",
     userInterfaceStyle: "light",
