@@ -22,7 +22,8 @@
         "UIBackgroundModes": [
           "remote-notification"
         ]
-      }
+      },
+      "buildNumber": "8"
     },
     "android": {
       "adaptiveIcon": {
@@ -43,7 +44,9 @@
         {
           "icon": "./assets/notification-icon.png",
           "color": "#ffffff",
-          "sounds": ["./assets/notification-sound.wav"]
+          "sounds": [
+            "./assets/notification-sound.wav"
+          ]
         }
       ]
     ],
