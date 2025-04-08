@@ -133,12 +133,7 @@ const BudgetScreen: React.FC = () => {
         <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
           <View style={styles.header}>
             <Text style={styles.title}>Gestion du Budget</Text>
-            <IconButton
-              icon="refresh"
-              size={24}
-              onPress={handleRefresh}
-              iconColor={theme.colors.primary}
-            />
+        
           </View>
 
           <View style={styles.statsContainer}>

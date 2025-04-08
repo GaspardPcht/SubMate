@@ -26,6 +26,7 @@ const MainTabNavigator = () => {
           bottom: 0,
           left: 0,
           right: 0,
+          paddingHorizontal: 16,
         },
         tabBarItemStyle: {
           paddingVertical: 8,
