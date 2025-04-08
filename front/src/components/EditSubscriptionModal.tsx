@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity, Modal as RNModal } from 'react-native';
+import { View, StyleSheet, ScrollView, TouchableOpacity, Modal as RNModal, Animated, Pressable } from 'react-native';
 import { TextInput, Button, Text, useTheme, IconButton } from 'react-native-paper';
 import { Subscription } from '../types';
 import { BillingCycle } from '../types/subscription';
 import { CATEGORIES } from '../constants/categories';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 interface EditSubscriptionModalProps {
   visible: boolean;
@@ -24,13 +25,34 @@ export const EditSubscriptionModal: React.FC<EditSubscriptionModalProps> = ({
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [showCategoryPicker, setShowCategoryPicker] = useState(false);
+  const slideAnim = React.useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     if (subscription) {
       setEditedSubscription({ ...subscription });
       setSelectedDate(new Date(subscription.nextBillingDate));
+    } else {
+      setSelectedDate(new Date());
     }
+    setShowDatePicker(true);
   }, [subscription]);
+
+  useEffect(() => {
+    if (visible) {
+      Animated.timing(slideAnim, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+    } else {
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+      setShowDatePicker(false);
+    }
+  }, [visible]);
 
   const handleSave = () => {
     if (editedSubscription && selectedDate) {
@@ -44,145 +66,148 @@ export const EditSubscriptionModal: React.FC<EditSubscriptionModalProps> = ({
 
   if (!editedSubscription) return null;
 
+  const translateY = slideAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [600, 0],
+  });
+
   return (
-    <>
-      <RNModal
-        visible={visible}
-        transparent
-        animationType="fade"
-        onRequestClose={onDismiss}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.header}>
-              <Text style={styles.title}>Modifier l'abonnement</Text>
-              <IconButton
-                icon="close"
-                size={24}
-                onPress={onDismiss}
-                iconColor={theme.colors.primary}
+    <RNModal
+      visible={visible}
+      transparent
+      animationType="none"
+      onRequestClose={onDismiss}
+    >
+      <View style={styles.modalOverlay}>
+        <TouchableOpacity 
+          style={styles.overlayTouchable}
+          activeOpacity={1}
+          onPress={onDismiss}
+        />
+        <Animated.View 
+          style={[
+            styles.modalContent,
+            {
+              transform: [{ translateY }],
+            },
+          ]}
+        >
+          <View style={styles.header}>
+            <Text style={styles.title}>Modifier l'abonnement</Text>
+            <IconButton
+              icon="close"
+              size={24}
+              onPress={onDismiss}
+              iconColor={theme.colors.primary}
+            />
+          </View>
+
+          <ScrollView style={styles.scrollView}>
+            <View style={styles.form}>
+              <TextInput
+                label="Nom"
+                value={editedSubscription.name}
+                onChangeText={(text) => setEditedSubscription({ ...editedSubscription, name: text })}
+                style={styles.input}
+                mode="flat"
+                theme={theme}
               />
-            </View>
 
-            <ScrollView style={styles.scrollView}>
-              <View style={styles.form}>
-                <TextInput
-                  label="Nom"
-                  value={editedSubscription.name}
-                  onChangeText={(text) => setEditedSubscription({ ...editedSubscription, name: text })}
-                  style={styles.input}
-                  mode="flat"
-                  theme={theme}
+              <TextInput
+                label="Prix"
+                value={editedSubscription.price.toString()}
+                onChangeText={(text) => setEditedSubscription({ ...editedSubscription, price: parseFloat(text) || 0 })}
+                keyboardType="numeric"
+                style={styles.input}
+                mode="flat"
+                theme={theme}
+                right={<TextInput.Affix text="€" />}
+              />
+
+              <Text style={styles.sectionTitle}>Catégorie</Text>
+              <TouchableOpacity
+                style={styles.categorySelector}
+                onPress={() => setShowCategoryPicker(true)}
+              >
+                <View style={[styles.categoryDot, { backgroundColor: CATEGORIES[editedSubscription.category].color }]} />
+                <Text style={styles.categoryText}>{CATEGORIES[editedSubscription.category].name}</Text>
+                <IconButton
+                  icon="chevron-down"
+                  size={24}
+                  iconColor="#666"
+                  style={styles.chevronIcon}
                 />
+              </TouchableOpacity>
 
-                <TextInput
-                  label="Prix"
-                  value={editedSubscription.price.toString()}
-                  onChangeText={(text) => setEditedSubscription({ ...editedSubscription, price: parseFloat(text) || 0 })}
-                  keyboardType="numeric"
-                  style={styles.input}
-                  mode="flat"
-                  theme={theme}
-                  right={<TextInput.Affix text="€" />}
-                />
-
-                <Text style={styles.sectionTitle}>Catégorie</Text>
-                <TouchableOpacity
-                  style={styles.categorySelector}
-                  onPress={() => setShowCategoryPicker(true)}
-                >
-                  <View style={[styles.categoryDot, { backgroundColor: CATEGORIES[editedSubscription.category].color }]} />
-                  <Text style={styles.categoryText}>{CATEGORIES[editedSubscription.category].name}</Text>
-                  <IconButton
-                    icon="chevron-down"
-                    size={24}
-                    iconColor="#666"
-                    style={styles.chevronIcon}
-                  />
-                </TouchableOpacity>
-
-                <View style={styles.billingCycleContainer}>
-                  <Text style={styles.sectionTitle}>Cycle de facturation</Text>
-                  <View style={styles.cycleButtons}>
-                    <TouchableOpacity
-                      style={[
-                        styles.cycleButton,
-                        editedSubscription.billingCycle === 'monthly' && styles.cycleButtonActive
-                      ]}
-                      onPress={() => setEditedSubscription({ ...editedSubscription, billingCycle: 'monthly' })}
-                    >
-                      <Text style={[
-                        styles.cycleButtonText,
-                        editedSubscription.billingCycle === 'monthly' && styles.cycleButtonTextActive
-                      ]}>Mensuel</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={[
-                        styles.cycleButton,
-                        editedSubscription.billingCycle === 'yearly' && styles.cycleButtonActive
-                      ]}
-                      onPress={() => setEditedSubscription({ ...editedSubscription, billingCycle: 'yearly' })}
-                    >
-                      <Text style={[
-                        styles.cycleButtonText,
-                        editedSubscription.billingCycle === 'yearly' && styles.cycleButtonTextActive
-                      ]}>Annuel</Text>
-                    </TouchableOpacity>
-                  </View>
+              <View style={styles.billingCycleContainer}>
+                <Text style={styles.sectionTitle}>Cycle de facturation</Text>
+                <View style={styles.cycleButtons}>
+                  <TouchableOpacity
+                    style={[
+                      styles.cycleButton,
+                      editedSubscription.billingCycle === 'monthly' && styles.cycleButtonActive
+                    ]}
+                    onPress={() => setEditedSubscription({ ...editedSubscription, billingCycle: 'monthly' })}
+                  >
+                    <Text style={[
+                      styles.cycleButtonText,
+                      editedSubscription.billingCycle === 'monthly' && styles.cycleButtonTextActive
+                    ]}>Mensuel</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[
+                      styles.cycleButton,
+                      editedSubscription.billingCycle === 'yearly' && styles.cycleButtonActive
+                    ]}
+                    onPress={() => setEditedSubscription({ ...editedSubscription, billingCycle: 'yearly' })}
+                  >
+                    <Text style={[
+                      styles.cycleButtonText,
+                      editedSubscription.billingCycle === 'yearly' && styles.cycleButtonTextActive
+                    ]}>Annuel</Text>
+                  </TouchableOpacity>
                 </View>
+              </View>
 
-                <TouchableOpacity
-                  onPress={() => setShowDatePicker(true)}
-                  style={styles.dateInput}
-                >
-                  <Text style={styles.sectionTitle}>Date de renouvellement</Text>
-                  <TextInput
-                    value={selectedDate ? selectedDate.toLocaleDateString('fr-FR') : ''}
-                    editable={false}
-                    style={styles.input}
-                    mode="flat"
-                    theme={theme}
-                    right={<TextInput.Icon icon="calendar" />}
-                  />
-                </TouchableOpacity>
-
-                {showDatePicker && (
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Date de renouvellement</Text>
+                <View style={styles.datePickerContainer}>
                   <DateTimePicker
                     value={selectedDate || new Date()}
                     mode="date"
-                    display="default"
+                    display="spinner"
                     onChange={(event, date) => {
-                      setShowDatePicker(false);
                       if (date) {
                         setSelectedDate(date);
                       }
                     }}
+                    style={styles.datePicker}
                   />
-                )}
+                </View>
               </View>
-            </ScrollView>
-
-            <View style={styles.buttonContainer}>
-              <Button 
-                mode="outlined" 
-                onPress={onDismiss}
-                style={styles.button}
-                labelStyle={styles.buttonLabel}
-              >
-                Annuler
-              </Button>
-              <Button 
-                mode="contained" 
-                onPress={handleSave}
-                style={[styles.button, styles.saveButton]}
-                labelStyle={styles.buttonLabel}
-              >
-                Enregistrer
-              </Button>
             </View>
+          </ScrollView>
+
+          <View style={styles.buttonContainer}>
+            <Button 
+              mode="outlined" 
+              onPress={onDismiss}
+              style={styles.button}
+              labelStyle={styles.buttonLabel}
+            >
+              Annuler
+            </Button>
+            <Button 
+              mode="contained" 
+              onPress={handleSave}
+              style={[styles.button, styles.saveButton]}
+              labelStyle={styles.buttonLabel}
+            >
+              Enregistrer
+            </Button>
           </View>
-        </View>
-      </RNModal>
+        </Animated.View>
+      </View>
 
       <RNModal
         visible={showCategoryPicker}
@@ -233,7 +258,7 @@ export const EditSubscriptionModal: React.FC<EditSubscriptionModalProps> = ({
           </View>
         </View>
       </RNModal>
-    </>
+    </RNModal>
   );
 };
 
@@ -241,15 +266,18 @@ const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
+  },
+  overlayTouchable: {
+    flex: 1,
   },
   modalContent: {
     backgroundColor: 'white',
-    borderRadius: 16,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
     width: '100%',
-    maxHeight: '80%',
+    maxHeight: '100%',
+    position: 'absolute',
+    bottom: 0,
   },
   categoryPickerContent: {
     maxHeight: '60%',
@@ -271,19 +299,19 @@ const styles = StyleSheet.create({
     color: '#377AF2',
   },
   scrollView: {
-    maxHeight: '70%',
+    maxHeight: '90%',
   },
   form: {
-    padding: 16,
+    padding: 20,
   },
   input: {
     marginBottom: 16,
     backgroundColor: 'white',
   },
   sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
+    fontSize: 13,
+    fontWeight: '500',
+    color: '#666',
     marginBottom: 8,
   },
   categorySelector: {
@@ -325,8 +353,20 @@ const styles = StyleSheet.create({
   checkIcon: {
     margin: 0,
   },
-  dateInput: {
+  section: {
     marginBottom: 16,
+  },
+  datePickerContainer: {
+    backgroundColor: 'white',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    overflow: 'hidden',
+    marginTop: 8,
+  },
+  datePicker: {
+    height: 150,
+    width: '100%',
   },
   billingCycleContainer: {
     marginBottom: 16,

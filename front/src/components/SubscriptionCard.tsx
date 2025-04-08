@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { StyleSheet, TouchableOpacity, View, Modal } from 'react-native';
 import { Card, Text, useTheme, Button } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { Subscription } from '../types';
+import { Subscription } from '../types/subscription';
 import { useAppDispatch, useAppSelector } from '../redux/hooks';
-import { deleteSubscription, updateSubscriptionDate } from '../redux/slices/subscriptionsSlice';
+import { deleteSubscription, updateSubscription } from '../redux/slices/subscriptionsSlice';
 import { Toast, ALERT_TYPE } from 'react-native-alert-notification';
+import { EditSubscriptionModal } from './EditSubscriptionModal';
 
 interface SubscriptionCardProps {
   subscription: Subscription;
@@ -17,41 +18,36 @@ const SubscriptionCard: React.FC<SubscriptionCardProps> = ({ subscription, onRef
   const { user } = useAppSelector((state) => state.auth);
   const theme = useTheme();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
 
-  useEffect(() => {
-    const checkAndUpdateDate = async () => {
-      const currentDate = new Date(subscription.nextBillingDate);
-      const today = new Date();
-      
-      // Si la date de renouvellement est passée
-      if (currentDate < today && user?._id) {
-        try {
-          await dispatch(updateSubscriptionDate({
-            subscriptionId: subscription._id,
-            userId: user._id,
-            subscription: subscription
-          })).unwrap();
-        } catch (error) {
-          console.error('Erreur lors de la mise à jour de la date:', error);
-        }
+  const handleEditPress = () => {
+    setShowEditModal(true);
+  };
+
+  const handleSaveSubscription = async (updatedSubscription: Subscription) => {
+    try {
+      console.log('Tentative de mise à jour de l\'abonnement:', updatedSubscription);
+      if (user?._id) {
+        const result = await dispatch(updateSubscription({ 
+          userId: user._id, 
+          subscription: updatedSubscription 
+        })).unwrap();
+        console.log('Résultat de la mise à jour:', result);
+        await onRefresh();
+        Toast.show({
+          type: ALERT_TYPE.SUCCESS,
+          title: 'Succès',
+          textBody: 'Abonnement mis à jour avec succès'
+        });
       }
-    };
-
-    checkAndUpdateDate();
-  }, [subscription.nextBillingDate]);
-
-  console.log('SubscriptionCard - subscription:', subscription);
-  console.log('SubscriptionCard - nextBillingDate:', subscription.nextBillingDate);
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const formattedDate = date.toLocaleDateString('fr-FR', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric'
-    });
-    console.log('Date formatée:', formattedDate);
-    return formattedDate;
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour de l\'abonnement:', error);
+      Toast.show({
+        type: ALERT_TYPE.DANGER,
+        title: 'Erreur',
+        textBody: 'Impossible de mettre à jour l\'abonnement'
+      });
+    }
   };
 
   const handleDeletePress = () => {
@@ -93,37 +89,49 @@ const SubscriptionCard: React.FC<SubscriptionCardProps> = ({ subscription, onRef
 
   return (
     <>
-      <Card style={styles.card} elevation={2}>
-        <Card.Content style={styles.cardContent}>
-          <View style={styles.leftContent}>
-            <View style={[styles.iconContainer, { backgroundColor: theme.colors.primary + '15' }]}>
-              <Text style={styles.letterIcon}>
-                {subscription.name ? subscription.name.charAt(0).toUpperCase() : '?'}
+      <TouchableOpacity onPress={handleEditPress}>
+        <Card style={styles.card} elevation={2}>
+          <Card.Content style={styles.cardContent}>
+            <View style={styles.leftContent}>
+              <View style={[styles.iconContainer, { backgroundColor: theme.colors.primary + '15' }]}>
+                <Text style={styles.letterIcon}>
+                  {subscription.name ? subscription.name.charAt(0).toUpperCase() : '?'}
+                </Text>
+              </View>
+              <View style={styles.textContainer}>
+                <Text style={styles.subscriptionName}>{subscription.name}</Text>
+                <Text style={styles.subscriptionPrice}>
+                  {subscription.price}€ / {subscription.billingCycle === 'monthly' ? 'mois' : 'an'}
+                </Text>
+              </View>
+            </View>
+            <View style={styles.rightContent}>
+              <Text style={styles.renewalDate}>
+                Renouvellement
+              </Text>
+              <Text style={[styles.renewalDateValue, { color: theme.colors.primary }]}>
+                {new Date(subscription.nextBillingDate).toLocaleDateString('fr-FR')}
               </Text>
             </View>
-            <View style={styles.textContainer}>
-              <Text style={styles.subscriptionName}>{subscription.name}</Text>
-              <Text style={styles.subscriptionPrice}>
-                {subscription.price}€ / {subscription.billingCycle === 'monthly' ? 'mois' : 'an'}
-              </Text>
-            </View>
-          </View>
-          <View style={styles.rightContent}>
-            <Text style={styles.renewalDate}>
-              Renouvellement
-            </Text>
-            <Text style={[styles.renewalDateValue, { color: theme.colors.primary }]}>
-              {formatDate(subscription.nextBillingDate)}
-            </Text>
-          </View>
-          <TouchableOpacity 
-            onPress={handleDeletePress}
-            style={[styles.deleteButton, { backgroundColor: '#ff4444' + '15' }]}
-          >
-            <Icon name="delete-outline" size={20} color="#ff4444" />
-          </TouchableOpacity>
-        </Card.Content>
-      </Card>
+            <TouchableOpacity 
+              onPress={(e) => {
+                e.stopPropagation();
+                setShowDeleteModal(true);
+              }}
+              style={[styles.deleteButton, { backgroundColor: '#ff4444' + '15' }]}
+            >
+              <Icon name="delete-outline" size={20} color="#ff4444" />
+            </TouchableOpacity>
+          </Card.Content>
+        </Card>
+      </TouchableOpacity>
+
+      <EditSubscriptionModal
+        visible={showEditModal}
+        subscription={subscription}
+        onDismiss={() => setShowEditModal(false)}
+        onSave={handleSaveSubscription}
+      />
 
       <Modal
         visible={showDeleteModal}
@@ -209,16 +217,17 @@ const styles = StyleSheet.create({
   renewalDateValue: {
     fontSize: 13,
     fontWeight: '500',
-    marginBottom: 8,
   },
   deleteButton: {
-    padding: 8,
-    borderRadius: 8,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
     marginLeft: 12,
-    alignSelf: 'center',
   },
   letterIcon: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: 'bold',
     color: '#377AF2',
   },
@@ -233,28 +242,27 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     borderRadius: 16,
     padding: 20,
-    width: '90%',
+    width: '100%',
     maxWidth: 400,
   },
   modalTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
-    marginBottom: 12,
+    marginBottom: 16,
     textAlign: 'center',
   },
   modalText: {
     fontSize: 16,
-    marginBottom: 20,
+    marginBottom: 24,
     textAlign: 'center',
-    color: '#666',
   },
   modalButtons: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    gap: 12,
   },
   modalButton: {
     flex: 1,
+    marginHorizontal: 8,
   },
   deleteModalButton: {
     backgroundColor: '#ff4444',

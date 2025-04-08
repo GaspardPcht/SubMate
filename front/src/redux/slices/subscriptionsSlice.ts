@@ -1,6 +1,8 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { Subscription, BillingCycle } from '../../types';
+import { Subscription } from '../../types/subscription';
+import { BillingCycle } from '../../types/subscription';
 import { api } from '../../services/api';
+import { updateSubscription as updateSubscriptionService } from '../../services/subscriptionService';
 import { Toast, ALERT_TYPE } from 'react-native-alert-notification';
 import { CategoryKey } from '../../constants/categories';
 
@@ -163,6 +165,48 @@ export const updateSubscriptionDate = createAsyncThunk(
   }
 );
 
+export const updateSubscription = createAsyncThunk(
+  'subscriptions/update',
+  async ({ userId, subscription }: { 
+    userId: string;
+    subscription: Subscription;
+  }) => {
+    try {
+      console.log('=== Début de la mise à jour frontend ===');
+      console.log('Données envoyées:', {
+        userId,
+        subscriptionId: subscription._id,
+        subscription
+      });
+
+      const updatedSubscription = await updateSubscriptionService(
+        subscription._id,
+        userId,
+        subscription
+      );
+      
+      console.log('Réponse du serveur:', updatedSubscription);
+      
+      Toast.show({
+        type: ALERT_TYPE.SUCCESS,
+        title: 'Succès',
+        textBody: 'Abonnement mis à jour avec succès'
+      });
+
+      console.log('=== Fin de la mise à jour frontend ===');
+      return updatedSubscription;
+    } catch (error: any) {
+      console.error('Erreur lors de la mise à jour de l\'abonnement:', error);
+      Toast.show({
+        type: ALERT_TYPE.DANGER,
+        title: 'Erreur',
+        textBody: error.message || 'Erreur lors de la mise à jour de l\'abonnement'
+      });
+      throw error;
+    }
+  }
+);
+
 const subscriptionsSlice = createSlice({
   name: 'subscriptions',
   initialState,
@@ -229,6 +273,12 @@ const subscriptionsSlice = createSlice({
         state.error = action.error.message || 'Une erreur est survenue';
       })
       .addCase(updateSubscriptionDate.fulfilled, (state, action) => {
+        const index = state.subscriptions.findIndex(sub => sub._id === action.payload._id);
+        if (index !== -1) {
+          state.subscriptions[index] = action.payload;
+        }
+      })
+      .addCase(updateSubscription.fulfilled, (state, action) => {
         const index = state.subscriptions.findIndex(sub => sub._id === action.payload._id);
         if (index !== -1) {
           state.subscriptions[index] = action.payload;

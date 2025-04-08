@@ -21,19 +21,25 @@ export const addSubscription = async (userId: string, subscription: Omit<Subscri
   }
 };
 
-export const updateSubscription = async (userId: string, subscriptionId: string, subscription: Partial<Subscription>) => {
+export const updateSubscription = async (subscriptionId: string, userId: string, subscription: Partial<Subscription>) => {
   try {
-    console.log('Making PUT request to update subscription:', {
-      url: `/subs/update/${subscriptionId}/${userId}`,
-      data: subscription
+    console.log('Tentative de mise à jour de l\'abonnement:', {
+      subscriptionId,
+      userId,
+      subscription
     });
-    
+
     const response = await api.put(`/subs/update/${subscriptionId}/${userId}`, subscription);
-    console.log('Update subscription response:', response.data);
+    
+    if (!response.data || !response.data.result) {
+      throw new Error('Format de réponse invalide');
+    }
+
+    console.log('Réponse de la mise à jour:', response.data);
     return response.data.sub;
-  } catch (error) {
+  } catch (error: any) {
     console.error('Erreur lors de la mise à jour de l\'abonnement:', error);
-    throw error;
+    throw new Error(error.response?.data?.message || 'Erreur lors de la mise à jour de l\'abonnement');
   }
 };
 

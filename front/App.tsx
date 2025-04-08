@@ -16,6 +16,7 @@ import RegisterScreen from './src/screens/RegisterScreen';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { api } from './src/services/api';
 import { useAppSelector } from './src/redux/hooks';
+import { EditSubscriptionScreen } from './src/screens/EditSubscriptionScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -78,6 +79,14 @@ function NavigationContent() {
             <Stack.Screen name="AddSubscription" component={AddSubscriptionScreen} />
             <Stack.Screen name="EditProfile" component={EditProfileScreen} />
             <Stack.Screen name="Support" component={SupportScreen} />
+            <Stack.Screen 
+              name="EditSubscription" 
+              component={EditSubscriptionScreen}
+              options={{
+                presentation: 'modal',
+                animation: 'slide_from_bottom'
+              }}
+            />
           </>
         )}
       </Stack.Navigator>
