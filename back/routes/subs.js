@@ -94,16 +94,20 @@ router.delete('/delete/:subscriptionId/:userId', async (req, res) => {
 router.put('/update/:subscriptionId/:userId', async (req, res) => {
   try {
     const { subscriptionId, userId } = req.params;
-    const { nextBillingDate } = req.body;
+    const { name, price, billingCycle, nextBillingDate, category } = req.body;
     
     console.log('Tentative de mise à jour:', {
       subscriptionId,
       userId,
-      nextBillingDate
+      name,
+      price,
+      billingCycle,
+      nextBillingDate,
+      category
     });
 
-    if (!subscriptionId || !userId || !nextBillingDate) {
-      console.error('Données manquantes:', { subscriptionId, userId, nextBillingDate });
+    if (!subscriptionId || !userId) {
+      console.error('Données manquantes:', { subscriptionId, userId });
       return res.json({ result: false, error: 'Données manquantes' });
     }
 
@@ -117,7 +121,13 @@ router.put('/update/:subscriptionId/:userId', async (req, res) => {
       return res.json({ result: false, error: 'Abonnement non trouvé' });
     }
 
-    subscription.nextBillingDate = nextBillingDate;
+    // Mettre à jour uniquement les champs fournis
+    if (name !== undefined) subscription.name = name;
+    if (price !== undefined) subscription.price = Number(price);
+    if (billingCycle !== undefined) subscription.billingCycle = billingCycle;
+    if (nextBillingDate !== undefined) subscription.nextBillingDate = nextBillingDate;
+    if (category !== undefined) subscription.category = category;
+    
     subscription.updatedAt = new Date();
     await user.save();
 
