@@ -25,16 +25,16 @@ export const EditSubscriptionModal: React.FC<EditSubscriptionModalProps> = ({
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [showCategoryPicker, setShowCategoryPicker] = useState(false);
+  const [category, setCategory] = useState<keyof typeof CATEGORIES>(subscription?.category || 'other');
   const slideAnim = React.useRef(new Animated.Value(0)).current;
+  const scaleAnim = React.useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     if (subscription) {
       setEditedSubscription({ ...subscription });
       setSelectedDate(new Date(subscription.nextBillingDate));
-    } else {
-      setSelectedDate(new Date());
+      setCategory(subscription.category);
     }
-    setShowDatePicker(true);
   }, [subscription]);
 
   useEffect(() => {
@@ -62,6 +62,27 @@ export const EditSubscriptionModal: React.FC<EditSubscriptionModalProps> = ({
       });
       onDismiss();
     }
+  };
+
+  const handleCategorySelect = (key: keyof typeof CATEGORIES) => {
+    Animated.sequence([
+      Animated.timing(scaleAnim, {
+        toValue: 0.95,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+      Animated.timing(scaleAnim, {
+        toValue: 1,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+    ]).start();
+    
+    setCategory(key);
+    if (editedSubscription) {
+      setEditedSubscription({ ...editedSubscription, category: key });
+    }
+    setShowCategoryPicker(false);
   };
 
   if (!editedSubscription) return null;
@@ -124,20 +145,88 @@ export const EditSubscriptionModal: React.FC<EditSubscriptionModalProps> = ({
                 right={<TextInput.Affix text="€" />}
               />
 
-              <Text style={styles.sectionTitle}>Catégorie</Text>
-              <TouchableOpacity
-                style={styles.categorySelector}
-                onPress={() => setShowCategoryPicker(true)}
+              <View style={styles.categorySection}>
+                <Text style={styles.sectionTitle}>Catégorie</Text>
+                <TouchableOpacity
+                  style={[
+                    styles.selectedCategory,
+                    showCategoryPicker && styles.selectedCategoryActive
+                  ]}
+                  onPress={() => setShowCategoryPicker(true)}
+                >
+                  <View style={[styles.categoryIconContainer, { backgroundColor: CATEGORIES[editedSubscription.category].color + '15' }]}>
+                    <MaterialCommunityIcons 
+                      name={CATEGORIES[editedSubscription.category].icon as any} 
+                      size={20} 
+                      color={CATEGORIES[editedSubscription.category].color}
+                    />
+                  </View>
+                  <Text style={[
+                    styles.selectedCategoryText,
+                    showCategoryPicker && styles.selectedCategoryTextActive
+                  ]}>
+                    {CATEGORIES[editedSubscription.category].name}
+                  </Text>
+                  <MaterialCommunityIcons 
+                    name="chevron-down" 
+                    size={20} 
+                    color="#666"
+                  />
+                </TouchableOpacity>
+              </View>
+
+              <RNModal
+                visible={showCategoryPicker}
+                transparent
+                animationType="fade"
+                onRequestClose={() => setShowCategoryPicker(false)}
               >
-                <View style={[styles.categoryDot, { backgroundColor: CATEGORIES[editedSubscription.category].color }]} />
-                <Text style={styles.categoryText}>{CATEGORIES[editedSubscription.category].name}</Text>
-                <IconButton
-                  icon="chevron-down"
-                  size={24}
-                  iconColor="#666"
-                  style={styles.chevronIcon}
-                />
-              </TouchableOpacity>
+                <View style={styles.modalOverlay}>
+                  <View style={[styles.modalContent, styles.categoryPickerContent]}>
+                    <View style={styles.header}>
+                      <Text style={styles.title}>Choisir une catégorie</Text>
+                      <IconButton
+                        icon="close"
+                        size={24}
+                        onPress={() => setShowCategoryPicker(false)}
+                        iconColor={theme.colors.primary}
+                      />
+                    </View>
+                    <ScrollView style={styles.scrollView}>
+                      {Object.entries(CATEGORIES).map(([key, category]) => (
+                        <TouchableOpacity
+                          key={key}
+                          style={[
+                            styles.categoryItem,
+                            editedSubscription.category === key && styles.categoryItemActive
+                          ]}
+                          onPress={() => {
+                            setEditedSubscription({
+                              ...editedSubscription,
+                              category: key as keyof typeof CATEGORIES
+                            });
+                            setShowCategoryPicker(false);
+                          }}
+                        >
+                          <View style={[styles.categoryIconContainer, { backgroundColor: category.color + '15' }]}>
+                            <MaterialCommunityIcons 
+                              name={category.icon as any} 
+                              size={20} 
+                              color={category.color}
+                            />
+                          </View>
+                          <Text style={[
+                            styles.categoryItemText,
+                            editedSubscription.category === key && styles.categoryItemTextActive
+                          ]}>
+                            {category.name}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </ScrollView>
+                  </View>
+                </View>
+              </RNModal>
 
               <View style={styles.billingCycleContainer}>
                 <Text style={styles.sectionTitle}>Cycle de facturation</Text>
@@ -242,16 +331,19 @@ export const EditSubscriptionModal: React.FC<EditSubscriptionModalProps> = ({
                     setShowCategoryPicker(false);
                   }}
                 >
-                  <View style={[styles.categoryDot, { backgroundColor: category.color }]} />
-                  <Text style={styles.categoryText}>{category.name}</Text>
-                  {editedSubscription.category === key && (
-                    <IconButton
-                      icon="check"
-                      size={20}
-                      iconColor={category.color}
-                      style={styles.checkIcon}
+                  <View style={[styles.categoryIconContainer, { backgroundColor: category.color + '15' }]}>
+                    <MaterialCommunityIcons 
+                      name={category.icon as any} 
+                      size={20} 
+                      color={category.color}
                     />
-                  )}
+                  </View>
+                  <Text style={[
+                    styles.categoryItemText,
+                    editedSubscription.category === key && styles.categoryItemTextActive
+                  ]}>
+                    {category.name}
+                  </Text>
                 </TouchableOpacity>
               ))}
             </ScrollView>
@@ -275,12 +367,15 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
     width: '100%',
-    maxHeight: '100%',
+    maxHeight: '90%',
     position: 'absolute',
     bottom: 0,
   },
   categoryPickerContent: {
-    maxHeight: '60%',
+    maxHeight: '70%',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingBottom: 30,
   },
   header: {
     flexDirection: 'row',
@@ -314,44 +409,69 @@ const styles = StyleSheet.create({
     color: '#666',
     marginBottom: 8,
   },
-  categorySelector: {
+  categorySection: {
+    marginBottom: 8,
+  },
+  selectedCategory: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    marginBottom: 16,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: 'white',
+    padding: 8,
+    borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: '#e0e0e0',
+    gap: 8,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  selectedCategoryActive: {
+    borderColor: '#377AF2',
+    backgroundColor: '#f8f9fa',
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  categoryIconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  selectedCategoryText: {
+    flex: 1,
+    fontSize: 14,
+    color: '#333',
+  },
+  selectedCategoryTextActive: {
+    color: '#377AF2',
+    fontWeight: '500',
   },
   categoryItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
+    padding: 10,
+    gap: 8,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: 'rgba(0, 0, 0, 0.03)',
   },
   categoryItemActive: {
-    backgroundColor: '#377AF220',
+    backgroundColor: 'rgba(55, 122, 242, 0.05)',
   },
-  categoryDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    marginRight: 12,
-  },
-  categoryText: {
-    fontSize: 16,
-    color: '#333',
+  categoryItemText: {
     flex: 1,
+    fontSize: 14,
+    color: '#666',
   },
-  chevronIcon: {
-    margin: 0,
-  },
-  checkIcon: {
-    margin: 0,
+  categoryItemTextActive: {
+    color: '#377AF2',
+    fontWeight: '500',
   },
   section: {
     marginBottom: 16,
