@@ -15,6 +15,7 @@ import { Subscription } from '../types';
 import { ALERT_TYPE, Toast } from 'react-native-alert-notification';
 import { scheduleAllSubscriptionReminders, cancelAllScheduledNotifications, testNotification } from '../services/notificationService';
 import * as Notifications from 'expo-notifications';
+import { RESPONSIVE, SPACING } from '../constants/dimensions';
 
 type IconName = keyof typeof MaterialCommunityIcons.glyphMap;
 
@@ -163,7 +164,10 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.scrollView}>
+      <ScrollView 
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollViewContent}
+      >
         <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
           <View style={styles.header}>
             <Avatar.Text
@@ -277,14 +281,16 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
-    paddingBottom: 30
   },
   scrollView: {
     flex: 1,
   },
+  scrollViewContent: {
+    paddingBottom: RESPONSIVE.tabBarHeight + RESPONSIVE.bottomSafeArea + SPACING.lg,
+  },
   content: {
     flex: 1,
-    padding: 16,
+    padding: SPACING.md,
   },
   header: {
     alignItems: 'center',

@@ -1,12 +1,13 @@
 import React, { useMemo } from 'react';
-import { View, StyleSheet, Dimensions, ScrollView, Animated, Platform } from 'react-native';
-import { Text, Surface, useTheme, IconButton } from 'react-native-paper';
+import { View, StyleSheet, Dimensions, ScrollView, Animated, Platform, Text } from 'react-native';
+import { Text as PaperText, Surface, useTheme, IconButton } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAppDispatch, useAppSelector } from '../redux/hooks';
 import { PieChart } from 'react-native-chart-kit';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { fetchSubscriptions } from '../redux/slices/subscriptionsSlice';
 import { CategoryKey } from '../constants/categories';
+import { RESPONSIVE, SPACING } from '../constants/dimensions';
 
 type BillingCycle = 'monthly' | 'yearly';
 type IconName = keyof typeof MaterialCommunityIcons.glyphMap;
@@ -121,18 +122,21 @@ const BudgetScreen: React.FC = () => {
     <Surface style={styles.statCard} elevation={3}>
       <View style={styles.statCardContent}>
         <MaterialCommunityIcons name={icon} size={24} color={theme.colors.primary} />
-        <Text style={styles.statValue}>{value}</Text>
-        <Text style={styles.statTitle}>{title}</Text>
+        <PaperText style={styles.statValue}>{value}</PaperText>
+        <PaperText style={styles.statTitle}>{title}</PaperText>
       </View>
     </Surface>
   );
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.scrollView}>
+      <ScrollView 
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollViewContent}
+      >
         <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
           <View style={styles.header}>
-            <Text style={styles.title}>Gestion du Budget</Text>
+            <PaperText style={styles.title}>Gestion du Budget</PaperText>
         
           </View>
 
@@ -151,11 +155,11 @@ const BudgetScreen: React.FC = () => {
 
           <Surface style={styles.chartCard} elevation={3}>
             <View style={styles.chartCardContent}>
-              <Text style={styles.chartTitle}>Répartition des dépenses</Text>
+              <PaperText style={styles.chartTitle}>Répartition des dépenses</PaperText>
               {subscriptions.length === 0 ? (
                 <View style={styles.emptyStateContainer}>
                   <MaterialCommunityIcons name="chart-pie" size={48} color={theme.colors.primary} />
-                  <Text style={styles.emptyStateText}>Pas encore d'abonnements</Text>
+                  <PaperText style={styles.emptyStateText}>Pas encore d'abonnements</PaperText>
                 </View>
               ) : (
                 <View style={styles.chartContainer}>
@@ -197,7 +201,7 @@ const BudgetScreen: React.FC = () => {
 
           <Surface style={styles.categoriesCard} elevation={3}>
             <View style={styles.categoriesCardContent}>
-              <Text style={styles.categoriesTitle}>Catégorisation des dépenses</Text>
+              <PaperText style={styles.categoriesTitle}>Catégorisation des dépenses</PaperText>
               {categorizedExpenses.map((category) => (
                 <View key={category.category} style={styles.categoryItem}>
                   <View style={styles.categoryHeader}>
@@ -206,13 +210,13 @@ const BudgetScreen: React.FC = () => {
                       size={24} 
                       color={category.color} 
                     />
-                    <Text style={styles.categoryName}>{category.name}</Text>
+                    <PaperText style={styles.categoryName}>{category.name}</PaperText>
                   </View>
                   <View style={styles.categoryAmount}>
-                    <Text style={styles.categoryValue}>{category.amount.toFixed(2)}€</Text>
-                    <Text style={styles.categoryPercentage}>
+                    <PaperText style={styles.categoryValue}>{category.amount.toFixed(2)}€</PaperText>
+                    <PaperText style={styles.categoryPercentage}>
                       {((category.amount / totalMonthly) * 100).toFixed(1)}%
-                    </Text>
+                    </PaperText>
                   </View>
                 </View>
               ))}
@@ -228,14 +232,16 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
-    paddingBottom: 20
   },
   scrollView: {
     flex: 1,
   },
+  scrollViewContent: {
+    paddingBottom: RESPONSIVE.tabBarHeight + RESPONSIVE.bottomSafeArea + SPACING.lg,
+  },
   content: {
     flex: 1,
-    padding: 16,
+    padding: SPACING.md,
   },
   header: {
     flexDirection: 'row',

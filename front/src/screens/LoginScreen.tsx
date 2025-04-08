@@ -20,11 +20,12 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const fadeAnim = React.useRef(new Animated.Value(0)).current;
   const slideAnim = React.useRef(new Animated.Value(0)).current;
   
   const dispatch = useAppDispatch();
-  const { user, loading, error } = useAppSelector((state) => state.auth);
+  const { error } = useAppSelector((state) => state.auth);
 
   useEffect(() => {
     if (error) {
@@ -34,6 +35,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
         textBody: error
       });
       dispatch(clearError());
+      setIsSubmitting(false);
     }
   }, [error, dispatch]);
 
@@ -55,6 +57,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
       return;
     }
 
+    setIsSubmitting(true);
     dispatch(loginUser({ email, password }));
   };
 
@@ -141,9 +144,9 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
 
             <Button
               mode="contained"
-              onPress={handleLogin}
+              onPress={isSubmitting ? undefined : handleLogin}
               style={styles.button}
-              loading={loading}
+              loading={isSubmitting}
             >
               Se connecter
             </Button>
