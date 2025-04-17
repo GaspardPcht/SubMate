@@ -21,7 +21,8 @@ const UserSchema = mongoose.Schema({
   password: { type: String, required: true },
   subscriptions: [SubscriptionSchema],
   resetPasswordToken: String,
-  resetPasswordExpiry: Date
+  resetPasswordExpiry: Date,
+  pushToken: { type: String, default: null }
 });
 
 const User = mongoose.model('User', UserSchema);

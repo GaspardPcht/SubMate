@@ -228,4 +228,34 @@ router.delete('/delete/:id', auth, async (req, res) => {
   }
 });
 
+// Mise à jour du token de notification
+router.post('/update-push-token', auth, async (req, res) => {
+  try {
+    const userId = req.userData.userId; // Obtenu du middleware auth
+    const { pushToken } = req.body;
+
+    if (!pushToken) {
+      return res.status(400).json({ result: false, error: 'Token de notification manquant' });
+    }
+
+    console.log('Mise à jour du token de notification pour l\'utilisateur:', userId);
+    console.log('Nouveau token:', pushToken);
+
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { pushToken },
+      { new: true }
+    );
+
+    if (!user) {
+      return res.status(404).json({ result: false, error: 'Utilisateur non trouvé' });
+    }
+
+    res.json({ result: true, message: 'Token de notification mis à jour', token: pushToken });
+  } catch (error) {
+    console.error('Erreur lors de la mise à jour du token:', error);
+    res.status(500).json({ result: false, error: 'Erreur serveur' });
+  }
+});
+
 module.exports = router;
