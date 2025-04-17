@@ -2,7 +2,7 @@ module.exports = {
   expo: {
     name: "SubMate",
     slug: "submate",
-    version: "1.0.9",
+    version: "1.0.11",
     orientation: "portrait",
     icon: "./assets/Logo/SubMate_logo.png",
     userInterfaceStyle: "light",
@@ -17,7 +17,13 @@ module.exports = {
     ios: {
       supportsTablet: true,
       bundleIdentifier: "com.gaspardpcht.submate",
-      buildNumber: "9"
+      buildNumber: "13",
+      infoPlist: {
+        ITSAppUsesNonExemptEncryption: false,
+        UIBackgroundModes: [
+          "remote-notification"
+        ]
+      }
     },
     android: {
       adaptiveIcon: {
@@ -27,13 +33,25 @@ module.exports = {
         size: 512
       },
       package: "com.gaspardpcht.submate",
-      versionCode: 9
+      versionCode: 13
     },
     web: {
       favicon: "./assets/Logo/SubMate_logo.png"
     },
+    plugins: [
+      [
+        "expo-notifications",
+        {
+          icon: "./assets/notification-icon.png",
+          color: "#ffffff",
+          sounds: [
+            "./assets/notification-sound.wav"
+          ]
+        }
+      ]
+    ],
     extra: {
-      apiUrl: process.env.EXPO_PUBLIC_API_URL,
+      apiUrl: "https://sub-mate-back.vercel.app",
       eas: {
         projectId: "48db2498-420e-4eb9-8aa6-a8a111e814f2"
       }

@@ -10,6 +10,16 @@ module.exports = function (api) {
         "whitelist": null,
         "safe": false,
         "allowUndefined": true
+      }],
+      ['module-resolver', {
+        root: ['./src'],
+        extensions: ['.ios.js', '.android.js', '.js', '.ts', '.tsx', '.json'],
+        alias: {
+          '@components': './src/components',
+          '@services': './src/services',
+          '@redux': './src/redux',
+          '@navigation': './src/navigation'
+        }
       }]
     ]
   };

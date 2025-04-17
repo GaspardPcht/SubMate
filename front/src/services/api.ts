@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 
 // URL de base de l'API
-const BASE_URL = Constants.expoConfig?.extra?.apiUrl?.replace(/\/$/, '') || 'http://192.168.1.32:3001';
+const BASE_URL = Constants.expoConfig?.extra?.apiUrl;
 
 console.log('API Configuration:', {
   baseURL: BASE_URL,
@@ -18,7 +18,11 @@ export const api = axios.create({
     'Content-Type': 'application/json',
     'Cache-Control': 'no-cache',
     'Pragma': 'no-cache',
+    'Accept': 'application/json',
+    'Access-Control-Allow-Origin': '*'
   },
+  timeout: 30000, // 30 secondes de timeout
+  validateStatus: (status) => status >= 200 && status < 500 // Accepter les réponses 2xx, 3xx et 4xx
 });
 
 // Intercepteur pour ajouter le token d'authentification
@@ -56,7 +60,7 @@ api.interceptors.response.use(
       data: error.response?.data,
       message: error.message,
       baseURL: error.config?.baseURL,
-      fullUrl: `${error.config?.baseURL}/${error.config?.url}`,
+      fullUrl: `${error.config?.baseURL}${error.config?.url}`,
       headers: error.config?.headers,
     });
     

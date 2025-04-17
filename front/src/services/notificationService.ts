@@ -5,6 +5,11 @@ import { RootState } from '../redux/store';
 import { Subscription } from '../types';
 import * as FileSystem from 'expo-file-system';
 import { Asset } from 'expo-asset';
+import axios from 'axios';
+import Constants from 'expo-constants';
+import * as Device from 'expo-device';
+
+const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000';
 
 // Configuration des notifications
 Notifications.setNotificationHandler({
@@ -31,7 +36,7 @@ const loadNotificationIcon = async () => {
 export const scheduleSubscriptionReminder = async (subscription: Subscription) => {
   try {
     const iconUri = await loadNotificationIcon();
-    
+
     // Calculer la date de la veille du débit
     const billingDate = new Date(subscription.nextBillingDate);
     const reminderDate = new Date(billingDate);
@@ -104,10 +109,46 @@ export const cancelAllScheduledNotifications = async () => {
 };
 
 // Fonction pour tester les notifications
+export const registerForPushNotifications = async (userId: string) => {
+  try {
+    if (!Device.isDevice) {
+      console.log('Les notifications ne sont pas disponibles sur l\'émulateur');
+      return null;
+    }
+
+    const { status: existingStatus } = await Notifications.getPermissionsAsync();
+    let finalStatus = existingStatus;
+
+    if (existingStatus !== 'granted') {
+      const { status } = await Notifications.requestPermissionsAsync();
+      finalStatus = status;
+    }
+
+    if (finalStatus !== 'granted') {
+      console.log('Permission refusée pour les notifications');
+      return null;
+    }
+
+    const pushToken = await Notifications.getExpoPushTokenAsync({
+      projectId: Constants.expoConfig?.extra?.eas?.projectId
+    });
+
+    // Envoyer le token au backend
+    await axios.put(`${API_URL}/users/update-push-token/${userId}`, {
+      pushToken: pushToken.data
+    });
+
+    return pushToken.data;
+  } catch (error) {
+    console.error('Erreur lors de l\'enregistrement pour les notifications:', error);
+    return null;
+  }
+};
+
 export const testNotification = async () => {
   try {
     const iconUri = await loadNotificationIcon();
-    
+
     await Notifications.scheduleNotificationAsync({
       content: {
         title: 'Test de notification',

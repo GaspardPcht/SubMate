@@ -19,11 +19,12 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.gaspardpcht.submate",
       "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
         "UIBackgroundModes": [
           "remote-notification"
         ]
       },
-      "buildNumber": "10"
+      "buildNumber": "14"
     },
     "android": {
       "adaptiveIcon": {
@@ -52,8 +53,9 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "your-project-id"
-      }
+        "projectId": "48db2498-420e-4eb9-8aa6-a8a111e814f2"
+      },
+      "apiUrl": "https://sub-mate-back.vercel.app"
     }
   }
 }

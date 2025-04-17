@@ -54,7 +54,7 @@ function NavigationContent() {
 
   if (isLoading) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <ActivityIndicator size="large" color="#377AF2" />
       </View>
     );
@@ -62,8 +62,8 @@ function NavigationContent() {
 
   return (
     <NavigationContainer>
-      <Stack.Navigator 
-        screenOptions={{ 
+      <Stack.Navigator
+        screenOptions={{
           headerShown: false,
           contentStyle: { backgroundColor: '#fff' }
         }}
@@ -79,8 +79,8 @@ function NavigationContent() {
             <Stack.Screen name="AddSubscription" component={AddSubscriptionScreen} />
             <Stack.Screen name="EditProfile" component={EditProfileScreen} />
             <Stack.Screen name="Support" component={SupportScreen} />
-            <Stack.Screen 
-              name="EditSubscription" 
+            <Stack.Screen
+              name="EditSubscription"
               component={EditSubscriptionScreen}
               options={{
                 presentation: 'modal',

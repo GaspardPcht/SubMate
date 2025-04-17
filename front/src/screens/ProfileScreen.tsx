@@ -102,7 +102,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
   const handleToggleNotifications = async () => {
     try {
       setLoading(true);
-      
+
       if (notificationsEnabled) {
         await cancelAllScheduledNotifications();
         await dispatch(toggleNotifications());
@@ -126,7 +126,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
 
       await scheduleAllSubscriptionReminders();
       await dispatch(toggleNotifications());
-      
+
       Toast.show({
         type: ALERT_TYPE.SUCCESS,
         title: 'Succès',
@@ -164,7 +164,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView 
+      <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollViewContent}
       >
