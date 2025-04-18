@@ -10,6 +10,7 @@ import { CompositeNavigationProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MainTabParamList, RootStackParamList } from '../types';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import * as Notifications from 'expo-notifications';
 
 type IconName = keyof typeof MaterialCommunityIcons.glyphMap;
 
@@ -55,6 +56,15 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
 
   // Charger les abonnements au montage du composant
   useEffect(() => {
+    const requestNotificationPermission = async () => {
+      const { status } = await Notifications.requestPermissionsAsync();
+      if (status !== 'granted') {
+        alert('Permission not granted for notifications!');
+      }
+    };
+
+    requestNotificationPermission();
+
     const loadData = async () => {
       if (user?._id) {
         try {
