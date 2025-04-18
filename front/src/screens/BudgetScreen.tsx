@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { View, StyleSheet, Dimensions, ScrollView, Animated, Platform, Text } from 'react-native';
 import { Text as PaperText, Surface, useTheme, IconButton } from 'react-native-paper';
+import StatCard from '../components/StatCard';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAppDispatch, useAppSelector } from '../redux/hooks';
 import { PieChart } from 'react-native-chart-kit';
@@ -119,13 +120,7 @@ const BudgetScreen: React.FC = () => {
   }, [subscriptions]);
 
   const renderStatCard = (title: string, value: string, icon: IconName) => (
-    <Surface style={styles.statCard} elevation={3}>
-      <View style={styles.statCardContent}>
-        <MaterialCommunityIcons name={icon} size={24} color={theme.colors.primary} />
-        <PaperText style={styles.statValue}>{value}</PaperText>
-        <PaperText style={styles.statTitle}>{title}</PaperText>
-      </View>
-    </Surface>
+    <StatCard title={title} value={value} icon={icon} />
   );
 
   return (
@@ -142,12 +137,12 @@ const BudgetScreen: React.FC = () => {
 
           <View style={styles.statsContainer}>
             {renderStatCard(
-              'Total Mensuel',
+              'Mensuel',
               `${totalMonthly.toFixed(2)}€`,
               'cash-multiple'
             )}
             {renderStatCard(
-              'Total Annuel',
+              'Annuel',
               `${yearlyTotal.toFixed(2)}€`,
               'calendar-check'
             )}

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, TouchableOpacity, View, Modal } from 'react-native';
 import { Card, Text, useTheme, Button } from 'react-native-paper';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Subscription } from '../types/subscription';
 import { useAppDispatch, useAppSelector } from '../redux/hooks';
 import { deleteSubscription, updateSubscription } from '../redux/slices/subscriptionsSlice';
@@ -93,7 +93,7 @@ const SubscriptionCard: React.FC<SubscriptionCardProps> = ({ subscription, onRef
         <Card style={styles.card} elevation={2}>
           <Card.Content style={styles.cardContent}>
             <View style={styles.leftContent}>
-              <View style={[styles.iconContainer, { backgroundColor: theme.colors.primary + '15' }]}>
+              <View style={{...styles.iconContainer, backgroundColor: theme.colors.primary + '15'}}>
                 <Text style={styles.letterIcon}>
                   {subscription.name ? subscription.name.charAt(0).toUpperCase() : '?'}
                 </Text>
@@ -109,7 +109,7 @@ const SubscriptionCard: React.FC<SubscriptionCardProps> = ({ subscription, onRef
               <Text style={styles.renewalDate}>
                 Renouvellement
               </Text>
-              <Text style={[styles.renewalDateValue, { color: theme.colors.primary }]}>
+              <Text style={{...styles.renewalDateValue, color: theme.colors.primary}}>
                 {new Date(subscription.nextBillingDate).toLocaleDateString('fr-FR')}
               </Text>
             </View>
@@ -118,9 +118,9 @@ const SubscriptionCard: React.FC<SubscriptionCardProps> = ({ subscription, onRef
                 e.stopPropagation();
                 setShowDeleteModal(true);
               }}
-              style={[styles.deleteButton, { backgroundColor: '#ff4444' + '15' }]}
+              style={{...styles.deleteButton, backgroundColor: '#ff4444' + '15'}}
             >
-              <Icon name="delete-outline" size={20} color="#ff4444" />
+              <MaterialCommunityIcons name="delete-outline" size={20} color="#ff4444" />
             </TouchableOpacity>
           </Card.Content>
         </Card>
@@ -156,7 +156,7 @@ const SubscriptionCard: React.FC<SubscriptionCardProps> = ({ subscription, onRef
               <Button 
                 mode="contained" 
                 onPress={handleConfirmDelete}
-                style={[styles.modalButton, styles.deleteModalButton]}
+                style={{...styles.modalButton, ...styles.deleteModalButton}}
                 textColor="white"
               >
                 Supprimer
