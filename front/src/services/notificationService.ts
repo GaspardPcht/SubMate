@@ -61,7 +61,16 @@ export const scheduleSubscriptionReminder = async (subscription: Subscription) =
       return;
     }
 
-    // Planifier la notification
+    // Configurer la date pour 9h00
+    reminderDate.setHours(9, 0, 0, 0);
+    
+    console.log('Date de notification planifiée exacte:', reminderDate);
+    console.log('Timestamp de notification:', reminderDate.getTime());
+    
+    // Utiliser le format le plus basique pour le trigger (timestamp en secondes)
+    const secondsUntilReminder = Math.floor((reminderDate.getTime() - Date.now()) / 1000);
+    console.log(`Notification planifiée dans ${secondsUntilReminder} secondes`);
+    
     await Notifications.scheduleNotificationAsync({
       content: {
         title: 'Rappel de débit',
@@ -70,15 +79,33 @@ export const scheduleSubscriptionReminder = async (subscription: Subscription) =
         data: { subscriptionId: subscription._id },
       },
       trigger: {
-        date: reminderDate,
-        hour: 9,
-        minute: 0,
-        repeats: true,
-        repeatsInterval: 'month',
-      } as unknown as Notifications.NotificationTriggerInput,
+        seconds: secondsUntilReminder,
+        type: 'timeInterval',
+      } as Notifications.NotificationTriggerInput,
     });
-
+    
     console.log('Notification planifiée pour:', reminderDate);
+    
+    // Planifier également pour le mois suivant
+    const nextMonthDate = new Date(reminderDate);
+    nextMonthDate.setMonth(nextMonthDate.getMonth() + 1);
+    console.log('Notification du mois suivant planifiée pour:', nextMonthDate);
+    
+    const secondsUntilNextMonth = Math.floor((nextMonthDate.getTime() - Date.now()) / 1000);
+    console.log(`Notification du mois prochain planifiée dans ${secondsUntilNextMonth} secondes`);
+    
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: 'Rappel de débit (mois prochain)',
+        body: `Votre abonnement ${subscription.name} se débitera demain pour un prix de ${subscription.price}€`,
+        sound: true,
+        data: { subscriptionId: subscription._id, nextMonth: true },
+      },
+      trigger: {
+        seconds: secondsUntilNextMonth,
+        type: 'timeInterval',
+      } as Notifications.NotificationTriggerInput,
+    });
   } catch (error) {
     console.error('Erreur lors de la planification de la notification:', error);
   }
