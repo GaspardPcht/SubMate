@@ -53,7 +53,7 @@ const MainTabNavigator = () => {
           ),
         }}
       />
-      <Tab.Screen
+      {/* <Tab.Screen
         name="Epargne"
         component={EpargneScreen}
         options={{
@@ -61,7 +61,7 @@ const MainTabNavigator = () => {
             <MaterialCommunityIcons name="piggy-bank" size={size} color={color} />
           ),
         }}
-      />
+      /> */}
       <Tab.Screen
         name="Profile"
         component={ProfileScreen}

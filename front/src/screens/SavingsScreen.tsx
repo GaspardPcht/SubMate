@@ -22,6 +22,7 @@ import {
   Portal,
 } from "react-native-paper";
 import StatCard from "../components/StatCard";
+import InterestSimulation from "../components/InterestSimulation"; // Importer le nouveau composant
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { LineChart } from "react-native-chart-kit";
@@ -682,191 +683,16 @@ const EpargneScreen: React.FC = () => {
                   />
                 </View>
                 {showInterestSimulation && totalSavings > 0 && (
-                  <View style={styles.chartContainer}>
-                    <View style={styles.simulationGraphicContainer}>
-                      <MaterialCommunityIcons
-                        name="calculator"
-                        size={48}
-                        color="#377AF2"
-                      />
-                      <PaperText style={styles.simulationTitle}>
-                        Simulation des intérêts
-                      </PaperText>
-                    </View>
-
-                    <View style={styles.projectionTabs}>
-                      {/* Onglet 1 an */}
-                      <TouchableOpacity
-                        style={
-                          projectionYears === 1
-                            ? {
-                                ...styles.projectionTab,
-                                ...styles.projectionTabActive,
-                              }
-                            : styles.projectionTab
-                        }
-                        onPress={() => setProjectionYears(1)}
-                      >
-                        <PaperText
-                          style={
-                            projectionYears === 1
-                              ? {
-                                  ...styles.projectionTabText,
-                                  ...styles.projectionTabTextActive,
-                                }
-                              : styles.projectionTabText
-                          }
-                        >
-                          1 an
-                        </PaperText>
-                      </TouchableOpacity>
-
-                      {/* Onglet 5 ans */}
-                      <TouchableOpacity
-                        style={
-                          projectionYears === 5
-                            ? {
-                                ...styles.projectionTab,
-                                ...styles.projectionTabActive,
-                              }
-                            : styles.projectionTab
-                        }
-                        onPress={() => setProjectionYears(5)}
-                      >
-                        <PaperText
-                          style={
-                            projectionYears === 5
-                              ? {
-                                  ...styles.projectionTabText,
-                                  ...styles.projectionTabTextActive,
-                                }
-                              : styles.projectionTabText
-                          }
-                        >
-                          5 ans
-                        </PaperText>
-                      </TouchableOpacity>
-
-                      {/* Onglet 10 ans */}
-                      <TouchableOpacity
-                        style={
-                          projectionYears === 10
-                            ? {
-                                ...styles.projectionTab,
-                                ...styles.projectionTabActive,
-                              }
-                            : styles.projectionTab
-                        }
-                        onPress={() => setProjectionYears(10)}
-                      >
-                        <PaperText
-                          style={
-                            projectionYears === 10
-                              ? {
-                                  ...styles.projectionTabText,
-                                  ...styles.projectionTabTextActive,
-                                }
-                              : styles.projectionTabText
-                          }
-                        >
-                          10 ans
-                        </PaperText>
-                      </TouchableOpacity>
-                    </View>
-
-                    <PaperText style={styles.chartFooter}>
-                      Projection sur {projectionYears}{" "}
-                      {projectionYears === 1 ? "an" : "ans"} selon les taux de
-                      chaque livret
-                    </PaperText>
-
-                    <View style={styles.interestSummaryContainer}>
-                      <View style={styles.interestSummaryHeader}>
-                        <MaterialCommunityIcons
-                          name="chart-line-variant"
-                          size={22}
-                          color="#377AF2"
-                        />
-                        <PaperText style={styles.interestSummaryTitle}>
-                          Intérêts cumulés sur {projectionYears}{" "}
-                          {projectionYears === 1 ? "an" : "ans"}
-                        </PaperText>
-                      </View>
-
-                      <View style={styles.interestSummaryContent}>
-                        {Object.entries(interestSimulation.totalInterestsByType)
-                          .map(([type, interest]) => {
-                            const accountType = type as SavingsAccountType;
-                            if (totalByAccountType[accountType] > 0) {
-                              return (
-                                <View
-                                  key={`interest-summary-${type}`}
-                                  style={styles.interestSummaryRow}
-                                >
-                                  <View style={styles.interestSummaryLeft}>
-                                    <View
-                                      style={{
-                                        ...styles.accountTypeIndicator,
-                                        backgroundColor:
-                                          getAccountTypeColor(accountType),
-                                        width: 10,
-                                        height: 10,
-                                      }}
-                                    />
-                                    <PaperText
-                                      style={styles.interestSummaryLabel}
-                                    >
-                                      {ACCOUNT_LABELS[accountType]}
-                                    </PaperText>
-                                  </View>
-                                  <View style={styles.interestValueBadge}>
-                                    <PaperText
-                                      style={styles.interestSummaryValue}
-                                    >
-                                      +{interest.toFixed(2)} €
-                                    </PaperText>
-                                  </View>
-                                </View>
-                              );
-                            }
-                            return null;
-                          })
-                          .filter((item) => item !== null)}
-                      </View>
-
-                      <View style={styles.interestSummaryTotal}>
-                        <PaperText style={styles.interestSummaryTotalLabel}>
-                          Total des intérêts
-                        </PaperText>
-                        <View style={styles.totalInterestValueBadge}>
-                          <PaperText style={styles.interestSummaryTotalValue}>
-                            +
-                            {Object.values(
-                              interestSimulation.totalInterestsByType
-                            )
-                              .reduce((sum, val) => sum + val, 0)
-                              .toFixed(2)}{" "}
-                            €
-                          </PaperText>
-                        </View>
-                      </View>
-                    </View>
-                  </View>
-                )}
-
-                {(!showInterestSimulation || totalSavings === 0) && (
-                  <View style={styles.emptyChartContainer}>
-                    <MaterialCommunityIcons
-                      name="chart-line"
-                      size={48}
-                      color="#ccc"
-                    />
-                    <PaperText style={styles.emptyStateText}>
-                      {totalSavings === 0
-                        ? "Ajoutez une épargne pour voir la simulation"
-                        : "Appuyez sur l'icône pour afficher la simulation"}
-                    </PaperText>
-                  </View>
+                  <InterestSimulation
+                    totalSavings={totalSavings}
+                    projectionYears={projectionYears}
+                    setProjectionYears={setProjectionYears}
+                    interestSimulation={interestSimulation}
+                    showInterestSimulation={showInterestSimulation}
+                    toggleInterestSimulation={() =>
+                      setShowInterestSimulation(!showInterestSimulation)
+                    }
+                  />
                 )}
               </View>
             </Surface>
