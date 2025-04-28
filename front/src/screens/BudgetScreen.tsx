@@ -7,7 +7,7 @@ import { useAppDispatch, useAppSelector } from '../redux/hooks';
 import { PieChart } from 'react-native-chart-kit';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { fetchSubscriptions } from '../redux/slices/subscriptionsSlice';
-import { CategoryKey } from '../constants/categories';
+import { CategoryKey, CATEGORIES } from '../constants/categories';
 import { RESPONSIVE, SPACING } from '../constants/dimensions';
 
 type BillingCycle = 'monthly' | 'yearly';
@@ -23,18 +23,6 @@ const CHART_COLORS = [
   '#37E4F2', // Cyan
   '#8CF237', // Vert clair
 ];
-
-const CATEGORIES = {
-  streaming: { name: 'Streaming', icon: 'play-circle', color: '#377AF2' },
-  music: { name: 'Musique', icon: 'music', color: '#F24B37' },
-  gaming: { name: 'Gaming', icon: 'gamepad-variant', color: '#37F2A8' },
-  fitness: { name: 'Fitness', icon: 'dumbbell', color: '#F2B237' },
-  insurance: { name: 'Assurance', icon: 'shield-check', color: '#9437F2' },
-  education: { name: 'Éducation', icon: 'school', color: '#F237E7' },
-  software: { name: 'Logiciels', icon: 'application', color: '#37E4F2' },
-  utilities: { name: 'Services', icon: 'cog', color: '#8CF237' },
-  other: { name: 'Autres', icon: 'dots-horizontal', color: '#666666' },
-};
 
 const BudgetScreen: React.FC = () => {
   const theme = useTheme();
@@ -91,17 +79,10 @@ const BudgetScreen: React.FC = () => {
   }, [subscriptions]);
 
   const categorizedExpenses = useMemo(() => {
-    const categories = {
-      streaming: 0,
-      music: 0,
-      gaming: 0,
-      fitness: 0,
-      insurance: 0,
-      education: 0,
-      software: 0,
-      utilities: 0,
-      other: 0,
-    };
+    const categories = Object.keys(CATEGORIES).reduce((acc, key) => {
+      acc[key as CategoryKey] = 0;
+      return acc;
+    }, {} as Record<CategoryKey, number>);
 
     subscriptions.forEach(sub => {
       const monthlyPrice = sub.billingCycle === 'monthly' ? sub.price : sub.price / 12;

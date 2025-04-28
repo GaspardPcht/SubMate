@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import type { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { View, StyleSheet, ScrollView, Animated, Dimensions, Platform, Pressable } from 'react-native';
 import { TextInput, Button, Text, useTheme, IconButton, Surface, Menu } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -25,7 +26,7 @@ const initialState = {
   nextBillingDate: new Date(),
 };
 
-const AddSubscriptionScreen: React.FC<AddSubscriptionScreenProps> = ({ navigation }) => {
+const AddSubscriptionScreen = ({ navigation }: AddSubscriptionScreenProps) => {
   const theme = useTheme();
   const [formState, setFormState] = useState(initialState);
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -69,7 +70,7 @@ const AddSubscriptionScreen: React.FC<AddSubscriptionScreenProps> = ({ navigatio
     return nextDate;
   };
 
-  const handleDateChange = (event: any, selectedDate?: Date): void => {
+  const handleDateChange = (event: DateTimePickerEvent, selectedDate?: Date): void => {
     // Sur Android, on ferme toujours le picker après la sélection
     if (Platform.OS === 'android') {
       setShowDatePicker(false);

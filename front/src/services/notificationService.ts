@@ -79,9 +79,9 @@ export const scheduleSubscriptionReminder = async (subscription: Subscription) =
         data: { subscriptionId: subscription._id },
       },
       trigger: {
-        seconds: secondsUntilReminder,
-        type: 'timeInterval',
-      } as Notifications.NotificationTriggerInput,
+        channelId: 'subscription-reminders',
+        date: reminderDate
+      } as Notifications.DateTriggerInput,
     });
     
     console.log('Notification planifiée pour:', reminderDate);
@@ -102,9 +102,9 @@ export const scheduleSubscriptionReminder = async (subscription: Subscription) =
         data: { subscriptionId: subscription._id, nextMonth: true },
       },
       trigger: {
-        seconds: secondsUntilNextMonth,
-        type: 'timeInterval',
-      } as Notifications.NotificationTriggerInput,
+        channelId: 'subscription-reminders',
+        date: nextMonthDate
+      } as Notifications.DateTriggerInput,
     });
   } catch (error) {
     console.error('Erreur lors de la planification de la notification:', error);
