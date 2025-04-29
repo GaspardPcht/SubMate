@@ -477,16 +477,17 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   datePickerContainer: {
-    backgroundColor: 'white',
     borderRadius: 10,
     borderWidth: 1,
     borderColor: '#e0e0e0',
     overflow: 'hidden',
     marginTop: 8,
+    backgroundColor: 'black',
   },
   datePicker: {
-    height: 150,
+    height: 100,
     width: '100%',
+    color: 'black'
   },
   billingCycleContainer: {
     marginBottom: 16,
