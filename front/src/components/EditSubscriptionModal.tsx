@@ -482,7 +482,6 @@ const styles = StyleSheet.create({
     borderColor: '#e0e0e0',
     overflow: 'hidden',
     marginTop: 8,
-    backgroundColor: 'black',
   },
   datePicker: {
     height: 100,
