@@ -2,7 +2,7 @@
   "expo": {
     "name": "SubMate",
     "slug": "submate",
-    "version": "1.0.13",
+    "version": "1.0.15",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
