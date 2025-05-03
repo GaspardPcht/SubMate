@@ -17,7 +17,7 @@ module.exports = {
     ios: {
       supportsTablet: true,
       bundleIdentifier: "com.gaspardpcht.submate",
-      buildNumber: process.env.EAS_BUILD_AUTOINCREMENT ?? "1",
+      buildNumber: "17",
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
         UIBackgroundModes: [
