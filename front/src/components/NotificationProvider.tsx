@@ -11,6 +11,8 @@ Notifications.setNotificationHandler({
     shouldShowAlert: true,
     shouldPlaySound: true,
     shouldSetBadge: true,
+    shouldShowBanner: true,
+    shouldShowList: true
   }),
 });
 
@@ -20,8 +22,8 @@ interface NotificationProviderProps {
 }
 
 const NotificationProvider: React.FC<NotificationProviderProps> = ({ isAuthenticated, children }) => {
-  const notificationListener = useRef<any>();
-  const responseListener = useRef<any>();
+  const notificationListener = useRef<Notifications.Subscription | null>(null);
+  const responseListener = useRef<Notifications.Subscription | null>(null);
 
 
   const registerForPushNotificationsAsync = async () => {
@@ -43,12 +45,23 @@ const NotificationProvider: React.FC<NotificationProviderProps> = ({ isAuthentic
       }
 
       if (Platform.OS === 'android') {
-        console.log('Configuration du canal Android...');
+        console.log('Configuration des canaux Android...');
+        // Canal par défaut
         await Notifications.setNotificationChannelAsync('default', {
           name: 'default',
           importance: Notifications.AndroidImportance.MAX,
           vibrationPattern: [0, 250, 250, 250],
           lightColor: '#FF231F7C',
+        });
+
+        // Canal pour les rappels d'abonnements
+        await Notifications.setNotificationChannelAsync('subscription-reminders', {
+          name: 'Rappels d\'abonnements',
+          description: 'Notifications pour les rappels de débit d\'abonnements',
+          importance: Notifications.AndroidImportance.HIGH,
+          sound: 'default',
+          enableVibrate: true,
+          vibrationPattern: [0, 250, 250, 250],
         });
       }
 
@@ -126,11 +139,22 @@ const NotificationProvider: React.FC<NotificationProviderProps> = ({ isAuthentic
       // Écouter les notifications reçues
       notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
         console.log('Notification reçue:', notification);
+        // Mettre à jour le badge si nécessaire
+        const badgeCount = notification.request.content.badge || 0;
+        if (typeof badgeCount === 'number') {
+          Notifications.setBadgeCountAsync(badgeCount);
+        }
       });
 
       // Écouter les réponses aux notifications
       responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
         console.log('Réponse à la notification:', response);
+        const { subscriptionId } = response.notification.request.content.data || {};
+        if (subscriptionId) {
+          // TODO: Implémenter la navigation vers les détails de l'abonnement
+          // Vous devrez passer la référence de navigation via les props ou un contexte
+          console.log('Navigation vers l\'abonnement:', subscriptionId);
+        }
       });
     };
 

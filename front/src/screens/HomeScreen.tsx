@@ -75,8 +75,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           // Charger les abonnements
           await dispatch(fetchSubscriptions(user._id));
 
-          // Planifier les notifications pour tous les abonnements
-          await scheduleAllSubscriptionReminders();
+          // Les notifications sont gérées par le NotificationProvider
         } catch (error) {
           console.error('Erreur lors de l\'initialisation:', error);
         }
