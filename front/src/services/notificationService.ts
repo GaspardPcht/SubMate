@@ -5,7 +5,6 @@ import { RootState } from '../redux/store';
 import { Subscription } from '../types';
 import * as FileSystem from 'expo-file-system';
 import { Asset } from 'expo-asset';
-import axios from 'axios';
 import Constants from 'expo-constants';
 import * as Device from 'expo-device';
 
@@ -17,6 +16,8 @@ Notifications.setNotificationHandler({
     shouldShowAlert: true,
     shouldPlaySound: true,
     shouldSetBadge: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
   }),
 });
 
@@ -160,12 +161,20 @@ export const registerForPushNotifications = async (userId: string) => {
       projectId: Constants.expoConfig?.extra?.eas?.projectId
     });
 
-    // Envoyer le token au backend
-    await axios.put(`${API_URL}/users/update-push-token/${userId}`, {
-      pushToken: pushToken.data
-    });
-
-    return pushToken.data;
+    try {
+      const res = await fetch(`${API_URL}/update-push-token`, {
+        method: 'POST',
+        body: JSON.stringify({
+          pushToken: pushToken.data
+        })
+      })
+      const data = await res.json()
+      console.log('Réponse API:', data)
+      return pushToken.data
+    } catch (error) {
+      console.log('Erreur API:', error)
+      return null
+    }
   } catch (error) {
     console.error('Erreur lors de l\'enregistrement pour les notifications:', error);
     return null;

@@ -11,6 +11,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MainTabParamList, RootStackParamList } from '../types';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Notifications from 'expo-notifications';
+import { registerForPushNotifications, cancelAllScheduledNotifications, scheduleAllSubscriptionReminders } from '../services/notificationService';
 
 type IconName = keyof typeof MaterialCommunityIcons.glyphMap;
 
@@ -28,6 +29,8 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
   const { subscriptions, loading } = useAppSelector((state) => state.subscriptions);
+
+
 
   // Trier les abonnements par date de renouvellement
   const sortedSubscriptions = useMemo(() => {
@@ -54,27 +57,43 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     });
   }, [subscriptions]);
 
-  // Charger les abonnements au montage du composant
+  // Charger les abonnements au montage du composant et initialiser les notifications
   useEffect(() => {
-    const requestNotificationPermission = async () => {
-      const { status } = await Notifications.requestPermissionsAsync();
-      if (status !== 'granted') {
-        alert('Permission not granted for notifications!');
-      }
-    };
-
-    requestNotificationPermission();
-
-    const loadData = async () => {
+    const initializeNotifications = async () => {
       if (user?._id) {
         try {
+          // Demander les permissions et enregistrer le token
+          const token = await registerForPushNotifications(user._id);
+          if (!token) {
+            console.log('Impossible d\'obtenir le token de notification');
+            return;
+          }
+
+          // Annuler toutes les notifications existantes pour éviter les doublons
+          await cancelAllScheduledNotifications();
+
+          // Charger les abonnements
           await dispatch(fetchSubscriptions(user._id));
+
+          // Planifier les notifications pour tous les abonnements
+          await scheduleAllSubscriptionReminders();
         } catch (error) {
-          console.error('Erreur lors du chargement des abonnements:', error);
+          console.error('Erreur lors de l\'initialisation:', error);
         }
       }
     };
-    loadData();
+
+    initializeNotifications();
+
+    // Configurer le gestionnaire de notifications
+    const subscription = Notifications.addNotificationReceivedListener(notification => {
+      console.log('Notification reçue:', notification);
+    });
+
+    // Nettoyer lors du démontage du composant
+    return () => {
+      subscription.remove();
+    };
   }, [user?._id, dispatch]);
 
   // Fonction de rafraîchissement
