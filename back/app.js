@@ -7,12 +7,14 @@ var cors = require('cors');
 var mongoose = require('mongoose');
 const cron = require('node-cron');
 const { checkUpcomingSubscriptions } = require('./services/notificationService');
+const { initCronJobs } = require('./services/cronService');
 require('./models/connection');
 
 var usersRouter = require('./routes/users');
 const subscriptionRoutes = require('./routes/subs');
 const supportRoutes = require('./routes/support');
 const testNotificationsRoutes = require('./routes/test-notifications');
+const notificationRoutes = require('./routes/notifications');
 var app = express();
 
 // Configuration CORS
@@ -32,6 +34,9 @@ app.use(express.static(path.join(__dirname, 'public')));
 mongoose.connect(process.env.CONNECTION_STRING)
   .then(() => {
     console.log('Connecté à MongoDB');
+    
+    // Initialize all cron jobs
+    initCronJobs();
     
     // Configuration du cron job pour vérifier les abonnements tous les jours à 9h
     cron.schedule('0 9 * * *', async () => {
@@ -58,10 +63,12 @@ app.get('/', (req, res) => {
 app.use('/users', usersRouter);
 app.use('/subs', subscriptionRoutes);
 app.use('/support', supportRoutes);
+app.use('/notifications', require('./routes/notifications'));
 
 // Route de test des notifications
 console.log('Enregistrement des routes de test');
 app.use('/test', testNotificationsRoutes);
+app.use('/notifications', notificationRoutes);
 
 // Log toutes les routes disponibles
 app._router.stack.forEach(function(r){

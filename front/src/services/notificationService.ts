@@ -1,5 +1,6 @@
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { store } from '../redux/store';
 import { RootState } from '../redux/store';
 import { Subscription } from '../types';
@@ -162,8 +163,12 @@ export const registerForPushNotifications = async (userId: string) => {
     });
 
     try {
-      const res = await fetch(`${API_URL}/update-push-token`, {
+      const res = await fetch(`${API_URL}/notifications/register-push-token`, {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${await AsyncStorage.getItem('userToken')}`
+        },
         body: JSON.stringify({
           pushToken: pushToken.data
         })
