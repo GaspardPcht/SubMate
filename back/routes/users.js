@@ -46,30 +46,38 @@ router.post('/signup', (req, res) => {
   });
 });
 
-router.post('/login', (req, res) => {
-  const { email, password } = req.body;
-  User.findOne({ email }).then(user => {
+router.post('/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    
+    // Recherche de l'utilisateur avec un timeout explicite
+    const user = await User.findOne({ email }).maxTimeMS(5000);
+    
     if (!user) {
-      res.json({ result: false, error: 'Cet email n\'existe pas' });
-      return;
+      return res.json({ result: false, error: 'Cet email n\'existe pas' });
     }
 
-    if (!bcrypt.compareSync(password, user.password)) {
-      res.json({ result: false, error: 'Mot de passe incorrect' });
-      return;
+    // Vérification du mot de passe
+    const passwordIsValid = await bcrypt.compare(password, user.password);
+    if (!passwordIsValid) {
+      return res.json({ result: false, error: 'Mot de passe incorrect' });
     }
 
+    // Génération du token JWT
     const token = jwt.sign(
       { 
         userId: user._id,
         env: ENV_ID
       },
       process.env.JWT_SECRET,
-      { noTimestamp: true }
+      { expiresIn: '24h' }
     );
 
-    res.json({ result: true, user, token });
-  });
+    return res.json({ result: true, user, token });
+  } catch (error) {
+    console.error('Login error:', error);
+    return res.status(500).json({ result: false, error: 'Erreur lors de la connexion' });
+  }
 });
 
 router.put('/update/:id', (req, res) => {

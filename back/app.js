@@ -31,11 +31,22 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Connexion à MongoDB
-mongoose.connect(process.env.CONNECTION_STRING)
+console.log('Tentative de connexion à MongoDB...');
+console.log('Environnement:', process.env.NODE_ENV);
+// Masquer les informations sensibles mais afficher le début de la chaîne pour diagnostic
+const connStringStart = process.env.CONNECTION_STRING ? 
+  process.env.CONNECTION_STRING.substring(0, 20) + '...' : 'non définie';
+console.log('Chaîne de connexion (début):', connStringStart);
+
+mongoose.connect(process.env.CONNECTION_STRING, {
+  serverSelectionTimeoutMS: 5000, // Timeout après 5 secondes
+  socketTimeoutMS: 45000, // Timeout de socket à 45 secondes
+})
   .then(() => {
-    console.log('Connecté à MongoDB');
+    console.log('Connecté à MongoDB avec succès');
     
     // Initialize all cron jobs
+    console.log('Initialisation des cron jobs...');
     initCronJobs();
     
     // Configuration du cron job pour vérifier les abonnements tous les jours à 9h
