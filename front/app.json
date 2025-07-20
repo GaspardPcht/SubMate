@@ -3,7 +3,6 @@
     "name": "SubMate",
     "slug": "submate",
     "version": "1.0.20",
-    "sdkVersion": "52.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
