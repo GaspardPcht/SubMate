@@ -22,6 +22,23 @@ Notifications.setNotificationHandler({
   }),
 });
 
+// Configurer le canal de notification Android
+const setupNotificationChannel = async () => {
+  if (Platform.OS === 'android') {
+    await Notifications.setNotificationChannelAsync('subscription-reminders', {
+      name: 'Rappels d\'abonnements',
+      description: 'Notifications pour les rappels de débit d\'abonnements',
+      importance: Notifications.AndroidImportance.HIGH,
+      vibrationPattern: [0, 250, 250, 250],
+      lightColor: '#377AF2',
+      sound: 'default',
+      enableLights: true,
+      enableVibrate: true,
+      showBadge: true,
+    });
+  }
+};
+
 // Fonction pour charger l'icône de notification
 const loadNotificationIcon = async () => {
   try {
@@ -34,19 +51,26 @@ const loadNotificationIcon = async () => {
   }
 };
 
-// Fonction pour planifier une notification
+// Fonction pour planifier une notification locale de secours (fallback)
 export const scheduleSubscriptionReminder = async (subscription: Subscription) => {
   try {
-    const iconUri = await loadNotificationIcon();
-
     // Calculer la date de la veille du débit
     const billingDate = new Date(subscription.nextBillingDate);
     const reminderDate = new Date(billingDate);
     reminderDate.setDate(reminderDate.getDate() - 1);
 
-    // Si la date est déjà passée, planifier pour le mois prochain
-    if (reminderDate < new Date()) {
-      reminderDate.setMonth(reminderDate.getMonth() + 1);
+    // Si la date est déjà passée, calculer la prochaine occurrence
+    const today = new Date();
+    if (reminderDate < today) {
+      if (subscription.billingCycle === 'monthly') {
+        while (reminderDate < today) {
+          reminderDate.setMonth(reminderDate.getMonth() + 1);
+        }
+      } else if (subscription.billingCycle === 'yearly') {
+        while (reminderDate < today) {
+          reminderDate.setFullYear(reminderDate.getFullYear() + 1);
+        }
+      }
     }
 
     // Vérifier si une notification existe déjà pour cette date
@@ -59,71 +83,149 @@ export const scheduleSubscriptionReminder = async (subscription: Subscription) =
     );
 
     if (existingNotification) {
-      console.log('Notification déjà planifiée pour cette date');
+      console.log('Notification locale déjà planifiée pour cette date');
       return;
     }
 
     // Configurer la date pour 9h00
     reminderDate.setHours(9, 0, 0, 0);
     
-    console.log('Date de notification planifiée exacte:', reminderDate);
-    console.log('Timestamp de notification:', reminderDate.getTime());
+    console.log('Notification locale planifiée pour:', reminderDate);
     
-    // Utiliser le format le plus basique pour le trigger (timestamp en secondes)
-    const secondsUntilReminder = Math.floor((reminderDate.getTime() - Date.now()) / 1000);
-    console.log(`Notification planifiée dans ${secondsUntilReminder} secondes`);
-    
+    // Planifier la notification locale comme fallback
     await Notifications.scheduleNotificationAsync({
       content: {
-        title: 'Rappel de débit',
-        body: `Votre abonnement ${subscription.name} se débitera demain pour un prix de ${subscription.price}€`,
+        title: 'Rappel SubMate',
+        body: `Votre abonnement ${subscription.name} sera débité demain (${subscription.price}€)`,
         sound: true,
-        data: { subscriptionId: subscription._id },
+        badge: 1,
+        data: { 
+          subscriptionId: subscription._id,
+          type: 'billing_reminder',
+          fallback: true
+        },
       },
       trigger: {
-        channelId: 'subscription-reminders',
-        date: reminderDate
+        date: reminderDate,
+        channelId: 'subscription-reminders'
       } as Notifications.DateTriggerInput,
     });
     
-    console.log('Notification planifiée pour:', reminderDate);
-    
-    // Planifier également pour le mois suivant
-    const nextMonthDate = new Date(reminderDate);
-    nextMonthDate.setMonth(nextMonthDate.getMonth() + 1);
-    console.log('Notification du mois suivant planifiée pour:', nextMonthDate);
-    
-    const secondsUntilNextMonth = Math.floor((nextMonthDate.getTime() - Date.now()) / 1000);
-    console.log(`Notification du mois prochain planifiée dans ${secondsUntilNextMonth} secondes`);
-    
-    await Notifications.scheduleNotificationAsync({
-      content: {
-        title: 'Rappel de débit (mois prochain)',
-        body: `Votre abonnement ${subscription.name} se débitera demain pour un prix de ${subscription.price}€`,
-        sound: true,
-        data: { subscriptionId: subscription._id, nextMonth: true },
-      },
-      trigger: {
-        channelId: 'subscription-reminders',
-        date: nextMonthDate
-      } as Notifications.DateTriggerInput,
-    });
+    console.log('Notification locale de secours planifiée');
   } catch (error) {
-    console.error('Erreur lors de la planification de la notification:', error);
+    console.error('Erreur lors de la planification de la notification locale:', error);
   }
 };
 
-// Fonction pour planifier les notifications pour toutes les abonnements actifs
+// Fonction pour planifier les notifications groupées pour tous les abonnements
 export const scheduleAllSubscriptionReminders = async () => {
   try {
     const state = store.getState();
     const subscriptions = (state as RootState).subscriptions.subscriptions;
-    // On considère tous les abonnements comme actifs car ils n'ont pas de statut
-    for (const subscription of subscriptions) {
-      await scheduleSubscriptionReminder(subscription);
+    
+    // Grouper les abonnements par date de débit
+    const subscriptionsByDate: { [key: string]: Subscription[] } = {};
+    
+    subscriptions.forEach(subscription => {
+      const billingDate = new Date(subscription.nextBillingDate);
+      const reminderDate = new Date(billingDate);
+      reminderDate.setDate(reminderDate.getDate() - 1);
+      
+      // Calculer la prochaine date si elle est passée
+      const today = new Date();
+      if (reminderDate < today) {
+        if (subscription.billingCycle === 'monthly') {
+          while (reminderDate < today) {
+            reminderDate.setMonth(reminderDate.getMonth() + 1);
+          }
+        } else if (subscription.billingCycle === 'yearly') {
+          while (reminderDate < today) {
+            reminderDate.setFullYear(reminderDate.getFullYear() + 1);
+          }
+        }
+      }
+      
+      const dateKey = reminderDate.toDateString();
+      if (!subscriptionsByDate[dateKey]) {
+        subscriptionsByDate[dateKey] = [];
+      }
+      subscriptionsByDate[dateKey].push(subscription);
+    });
+
+    // Planifier une notification groupée par date
+    for (const [dateKey, subs] of Object.entries(subscriptionsByDate)) {
+      await scheduleGroupedNotification(subs, new Date(dateKey));
     }
   } catch (error) {
     console.error('Erreur lors de la planification des notifications:', error);
+  }
+};
+
+// Nouvelle fonction pour planifier une notification groupée
+const scheduleGroupedNotification = async (subscriptions: Subscription[], reminderDate: Date) => {
+  try {
+    // Vérifier si une notification existe déjà pour cette date
+    const existingNotifications = await Notifications.getAllScheduledNotificationsAsync();
+    const existingNotification = existingNotifications.find(
+      (notification) =>
+        notification.trigger && 'date' in notification.trigger &&
+        new Date(notification.trigger.date).toDateString() === reminderDate.toDateString()
+    );
+
+    if (existingNotification) {
+      console.log('Notification groupée déjà planifiée pour cette date');
+      return;
+    }
+
+    // Configurer la date pour 9h00
+    reminderDate.setHours(9, 0, 0, 0);
+    
+    let title, body;
+    
+    if (subscriptions.length === 1) {
+      // Une seule souscription
+      title = 'Rappel SubMate';
+      body = `Votre abonnement ${subscriptions[0].name} sera débité demain (${subscriptions[0].price}€)`;
+    } else {
+      // Plusieurs souscriptions
+      title = `${subscriptions.length} abonnements à débiter demain`;
+      const totalAmount = subscriptions.reduce((sum, sub) => sum + sub.price, 0);
+      const subscriptionNames = subscriptions.map(sub => sub.name).join(', ');
+      
+      if (subscriptions.length === 2) {
+        body = `${subscriptionNames} seront débités demain (${totalAmount}€)`;
+      } else if (subscriptions.length <= 4) {
+        body = `${subscriptionNames} seront débités demain (${totalAmount}€)`;
+      } else {
+        body = `${subscriptions.length} abonnements seront débités demain (${totalAmount}€)`;
+      }
+    }
+    
+    console.log('Notification locale groupée planifiée pour:', reminderDate);
+    
+    // Planifier la notification locale groupée
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title,
+        body,
+        sound: true,
+        badge: subscriptions.length,
+        data: { 
+          subscriptionIds: subscriptions.map(s => s._id),
+          type: 'billing_reminder_group',
+          fallback: true,
+          count: subscriptions.length
+        },
+      },
+      trigger: {
+        date: reminderDate,
+        channelId: 'subscription-reminders'
+      } as Notifications.DateTriggerInput,
+    });
+    
+    console.log(`Notification locale groupée planifiée pour ${subscriptions.length} abonnement(s)`);
+  } catch (error) {
+    console.error('Erreur lors de la planification de la notification groupée:', error);
   }
 };
 
@@ -137,9 +239,12 @@ export const cancelAllScheduledNotifications = async () => {
   }
 };
 
-// Fonction pour tester les notifications
+// Fonction pour enregistrer les notifications push
 export const registerForPushNotifications = async (userId: string) => {
   try {
+    // Configurer le canal de notification en premier
+    await setupNotificationChannel();
+
     if (!Device.isDevice) {
       console.log('Les notifications ne sont pas disponibles sur l\'émulateur');
       return null;
@@ -149,7 +254,18 @@ export const registerForPushNotifications = async (userId: string) => {
     let finalStatus = existingStatus;
 
     if (existingStatus !== 'granted') {
-      const { status } = await Notifications.requestPermissionsAsync();
+      const { status } = await Notifications.requestPermissionsAsync({
+        ios: {
+          allowAlert: true,
+          allowBadge: true,
+          allowSound: true,
+          allowDisplayInCarPlay: true,
+          allowCriticalAlerts: false,
+          provideAppNotificationSettings: true,
+          allowProvisional: false,
+          allowAnnouncements: false,
+        },
+      });
       finalStatus = status;
     }
 
@@ -161,6 +277,8 @@ export const registerForPushNotifications = async (userId: string) => {
     const pushToken = await Notifications.getExpoPushTokenAsync({
       projectId: Constants.expoConfig?.extra?.eas?.projectId
     });
+
+    console.log('Token push obtenu:', pushToken.data);
 
     try {
       const res = await fetch(`${API_URL}/notifications/register-push-token`, {
@@ -174,11 +292,12 @@ export const registerForPushNotifications = async (userId: string) => {
         })
       })
       const data = await res.json()
-      console.log('Réponse API:', data)
+      console.log('Token enregistré sur le serveur:', data)
       return pushToken.data
     } catch (error) {
-      console.log('Erreur API:', error)
-      return null
+      console.log('Erreur lors de l\'enregistrement du token (non-bloquante):', error)
+      // Retourner le token même si l'enregistrement serveur échoue
+      return pushToken.data
     }
   } catch (error) {
     console.error('Erreur lors de l\'enregistrement pour les notifications:', error);

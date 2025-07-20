@@ -21,6 +21,29 @@ router.get('/user/:userId', async (req, res) => {
   }
 });
 
+// Fonction utilitaire pour calculer la prochaine date de facturation
+const calculateNextBillingDate = (currentDate, billingCycle) => {
+  const date = new Date(currentDate);
+  const today = new Date();
+
+  // Si la date est passée, calculer la prochaine date
+  if (date < today) {
+    if (billingCycle === 'monthly') {
+      // Ajouter des mois jusqu'à ce que la date soit dans le futur
+      while (date < today) {
+        date.setMonth(date.getMonth() + 1);
+      }
+    } else if (billingCycle === 'yearly') {
+      // Ajouter des années jusqu'à ce que la date soit dans le futur
+      while (date < today) {
+        date.setFullYear(date.getFullYear() + 1);
+      }
+    }
+  }
+  
+  return date.toISOString();
+};
+
 // Créer un nouvel abonnement
 router.post('/create', async (req, res) => {
   try {
@@ -45,11 +68,14 @@ router.post('/create', async (req, res) => {
       return res.json({ result: false, error: 'Utilisateur non trouvé' });
     }
 
+    // Calculer automatiquement la prochaine date si la date fournie est passée
+    const calculatedNextBillingDate = calculateNextBillingDate(nextBillingDate, billingCycle);
+
     const newSubscription = {
       name,
       price: Number(price),
       billingCycle,
-      nextBillingDate,
+      nextBillingDate: calculatedNextBillingDate,
       category: category || 'other',
       createdAt: new Date(),
       updatedAt: new Date()
@@ -125,7 +151,10 @@ router.put('/update/:subscriptionId/:userId', async (req, res) => {
     if (name !== undefined) subscription.name = name;
     if (price !== undefined) subscription.price = Number(price);
     if (billingCycle !== undefined) subscription.billingCycle = billingCycle;
-    if (nextBillingDate !== undefined) subscription.nextBillingDate = nextBillingDate;
+    if (nextBillingDate !== undefined) {
+      // Calculer automatiquement la prochaine date si la date fournie est passée
+      subscription.nextBillingDate = calculateNextBillingDate(nextBillingDate, billingCycle || subscription.billingCycle);
+    }
     if (category !== undefined) subscription.category = category;
     
     subscription.updatedAt = new Date();
