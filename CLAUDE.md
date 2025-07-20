@@ -9,6 +9,7 @@ SubMate is a subscription management mobile application built with React Native 
 ## Architecture
 
 ### Frontend (`front/`)
+
 - **Framework**: React Native with Expo SDK 52
 - **State Management**: Redux Toolkit with Redux Persist for offline storage
 - **Navigation**: React Navigation v7 with bottom tabs
@@ -17,6 +18,7 @@ SubMate is a subscription management mobile application built with React Native 
 - **Charts**: React Native Chart Kit for data visualization
 
 ### Backend (`back/`)
+
 - **Framework**: Express.js with Node.js
 - **Database**: MongoDB with Mongoose ODM
 - **Authentication**: JWT tokens with bcrypt for password hashing
@@ -25,6 +27,7 @@ SubMate is a subscription management mobile application built with React Native 
 - **Scheduling**: Node-cron for subscription reminders
 
 ### Key Architecture Patterns
+
 - Redux store persists authentication state to AsyncStorage
 - API layer in `front/src/services/` handles all backend communication
 - Notification service manages both local and push notifications
@@ -33,6 +36,7 @@ SubMate is a subscription management mobile application built with React Native 
 ## Development Commands
 
 ### Frontend Development
+
 ```bash
 cd front
 npm install
@@ -43,6 +47,7 @@ npm run web           # Start web development
 ```
 
 ### Backend Development
+
 ```bash
 cd back
 npm install
@@ -50,6 +55,7 @@ npm start             # Start Express server (node ./bin/www)
 ```
 
 ### Mobile App Building
+
 ```bash
 cd front
 eas build --platform ios --profile preview     # Build iOS preview
@@ -60,21 +66,25 @@ eas build --platform all --profile production  # Production builds
 ## Key Files and Patterns
 
 ### State Management
+
 - Redux store in `front/src/redux/store.ts` with persistence configuration
 - Auth slice handles user authentication and token management
 - Subscriptions slice manages subscription data and CRUD operations
 
 ### API Integration
+
 - Base API configuration in `front/src/config/api.ts`
 - Service layer in `front/src/services/` for organized API calls
 - Backend API base URL: `https://sub-mate-back.vercel.app`
 
 ### Database Models
+
 - User model: `back/models/User.ts` (TypeScript) and `back/models/user.js` (JavaScript)
 - Subscription model: `back/models/Subscription.ts` and `back/models/Subscription.js`
 - Connection setup in `back/models/connection.js`
 
 ### Notification System
+
 - Frontend: `front/src/services/notificationService.ts`
 - Backend: `back/services/notificationService.js`
 - Reminder service: `back/services/reminderService.js`
@@ -88,3 +98,8 @@ eas build --platform all --profile production  # Production builds
 - App supports both iOS and Android with specific bundle identifiers
 - Push notifications require proper Expo configuration and device permissions
 - Redux Persist whitelist includes only the 'auth' slice for performance
+
+## For Git and Github
+
+- Never write in commit message "🤖 Generated with [Claude Code](https://claude.ai/code)
+  Co-Authored-By: Claude <noreply@anthropic.com>"
