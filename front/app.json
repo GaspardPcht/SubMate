@@ -22,10 +22,12 @@
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "UIBackgroundModes": [
-          "remote-notification"
+          "remote-notification",
+          "background-processing",
+          "background-fetch"
         ]
       },
-      "buildNumber": "19"
+      "buildNumber": "20"
     },
     "android": {
       "adaptiveIcon": {
@@ -34,7 +36,10 @@
       },
       "package": "com.submate.app",
       "permissions": [
-        "NOTIFICATIONS"
+        "NOTIFICATIONS",
+        "RECEIVE_BOOT_COMPLETED",
+        "WAKE_LOCK",
+        "VIBRATE"
       ]
     },
     "web": {
@@ -45,10 +50,11 @@
         "expo-notifications",
         {
           "icon": "./assets/notification-icon.png",
-          "color": "#ffffff",
+          "color": "#377AF2",
           "sounds": [
             "./assets/notification-sound.wav"
-          ]
+          ],
+          "defaultChannel": "subscription-reminders"
         }
       ]
     ],

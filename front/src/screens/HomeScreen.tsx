@@ -1,24 +1,19 @@
 import React, { useEffect, useCallback, useMemo } from 'react';
-import { View, StyleSheet, FlatList, ActivityIndicator, Platform } from 'react-native';
-import { Text, FAB, useTheme, IconButton, Surface } from 'react-native-paper';
+import { View, StyleSheet, FlatList, ActivityIndicator } from 'react-native';
+import { Text, FAB, useTheme, IconButton } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAppDispatch, useAppSelector } from '../redux/hooks';
 import { fetchSubscriptions } from '../redux/slices/subscriptionsSlice';
 import SubscriptionCard from '../components/SubscriptionCard';
-import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
-import { CompositeNavigationProp } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MainTabParamList, RootStackParamList } from '../types';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Notifications from 'expo-notifications';
 import { registerForPushNotifications, cancelAllScheduledNotifications, scheduleAllSubscriptionReminders } from '../services/notificationService';
 
-type IconName = keyof typeof MaterialCommunityIcons.glyphMap;
-
-type HomeScreenNavigationProp = CompositeNavigationProp<
-  BottomTabNavigationProp<MainTabParamList, 'Home'>,
-  NativeStackNavigationProp<RootStackParamList>
->;
+type HomeScreenNavigationProp = BottomTabNavigationProp<MainTabParamList, 'Home'> & 
+  NativeStackNavigationProp<RootStackParamList>;
 
 type HomeScreenProps = {
   navigation: HomeScreenNavigationProp;
@@ -57,32 +52,51 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     });
   }, [subscriptions]);
 
-  // Charger les abonnements au montage du composant et initialiser les notifications
+  // Charger les abonnements et initialiser les notifications
   useEffect(() => {
-    const initializeNotifications = async () => {
+    const initializeApp = async () => {
       if (user?._id) {
         try {
-          // Demander les permissions et enregistrer le token
-          const token = await registerForPushNotifications(user._id);
-          if (!token) {
-            console.log('Impossible d\'obtenir le token de notification');
-            return;
-          }
+          // Charger les abonnements en premier (plus rapide)
+          const subscriptionsPromise = dispatch(fetchSubscriptions(user._id));
+          
+          // Initialiser les notifications en parallèle
+          const notificationsPromise = (async () => {
+            const token = await registerForPushNotifications(user._id);
+            if (token) {
+              // Annuler les anciennes notifications pour éviter les doublons
+              await cancelAllScheduledNotifications();
+              console.log('Notifications initialisées avec succès');
+            }
+          })();
 
-          // Annuler toutes les notifications existantes pour éviter les doublons
-          await cancelAllScheduledNotifications();
+          // Attendre que les abonnements soient chargés
+          await subscriptionsPromise;
+          
+          // Planifier les notifications groupées après le chargement des abonnements
+          notificationsPromise
+            .then(async () => {
+              // Attendre un peu pour s'assurer que les abonnements sont bien dans le store
+              setTimeout(async () => {
+                try {
+                  await scheduleAllSubscriptionReminders();
+                  console.log('Notifications groupées planifiées');
+                } catch (error) {
+                  console.log('Erreur lors de la planification des notifications groupées:', error);
+                }
+              }, 1000);
+            })
+            .catch(error => {
+              console.log('Erreur notifications (non-bloquante):', error);
+            });
 
-          // Charger les abonnements
-          await dispatch(fetchSubscriptions(user._id));
-
-          // Les notifications sont gérées par le NotificationProvider
         } catch (error) {
-          console.error('Erreur lors de l\'initialisation:', error);
+          console.error('Erreur lors du chargement des abonnements:', error);
         }
       }
     };
 
-    initializeNotifications();
+    initializeApp();
 
     // Configurer le gestionnaire de notifications
     const subscription = Notifications.addNotificationReceivedListener(notification => {

@@ -2,7 +2,7 @@ module.exports = {
   expo: {
     name: "SubMate",
     slug: "submate",
-    version: "1.0.18",
+    version: "1.0.19",
     orientation: "portrait",
     icon: "./assets/Logo/SubMate_logo.png",
     userInterfaceStyle: "light",
@@ -17,7 +17,7 @@ module.exports = {
     ios: {
       supportsTablet: true,
       bundleIdentifier: "com.gaspardpcht.submate",
-      buildNumber: "18",
+      buildNumber: "19",
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
         UIBackgroundModes: [
@@ -33,7 +33,7 @@ module.exports = {
         size: 512
       },
       package: "com.gaspardpcht.submate",
-      versionCode: 18
+      versionCode: 19
     },
     web: {
       favicon: "./assets/Logo/SubMate_logo.png"
