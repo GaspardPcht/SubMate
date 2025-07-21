@@ -10,7 +10,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MainTabParamList, RootStackParamList } from '../types';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Notifications from 'expo-notifications';
-import { registerForPushNotifications, cancelAllScheduledNotifications, scheduleAllSubscriptionReminders } from '../services/notificationService';
+import { registerForPushNotifications, cancelAllScheduledNotifications } from '../services/notificationService';
 
 type HomeScreenNavigationProp = BottomTabNavigationProp<MainTabParamList, 'Home'> & 
   NativeStackNavigationProp<RootStackParamList>;
@@ -57,38 +57,40 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     const initializeApp = async () => {
       if (user?._id) {
         try {
-          // Charger les abonnements en premier (plus rapide)
+          // Si on a déjà des abonnements en cache, pas besoin d'attendre
+          const hasSubscriptionsInCache = subscriptions.length > 0;
+          
+          if (hasSubscriptionsInCache) {
+            console.log('Utilisation du cache pour l\'affichage immédiat');
+          }
+
+          // Charger les abonnements depuis le serveur (en arrière-plan si cache existe)
           const subscriptionsPromise = dispatch(fetchSubscriptions(user._id));
           
           // Initialiser les notifications en parallèle
           const notificationsPromise = (async () => {
             const token = await registerForPushNotifications(user._id);
             if (token) {
-              // Annuler les anciennes notifications pour éviter les doublons
+              // Annuler les anciennes notifications locales pour éviter les doublons
               await cancelAllScheduledNotifications();
               console.log('Notifications initialisées avec succès');
             }
           })();
 
-          // Attendre que les abonnements soient chargés
-          await subscriptionsPromise;
-          
-          // Planifier les notifications groupées après le chargement des abonnements
-          notificationsPromise
-            .then(async () => {
-              // Attendre un peu pour s'assurer que les abonnements sont bien dans le store
-              setTimeout(async () => {
-                try {
-                  await scheduleAllSubscriptionReminders();
-                  console.log('Notifications groupées planifiées');
-                } catch (error) {
-                  console.log('Erreur lors de la planification des notifications groupées:', error);
-                }
-              }, 1000);
-            })
-            .catch(error => {
-              console.log('Erreur notifications (non-bloquante):', error);
+          // Si pas de cache, attendre le chargement
+          if (!hasSubscriptionsInCache) {
+            await subscriptionsPromise;
+          } else {
+            // Avec cache, traitement en arrière-plan
+            subscriptionsPromise.catch(error => {
+              console.error('Erreur lors du refresh des abonnements:', error);
             });
+          }
+          
+          // Les notifications sont maintenant gérées uniquement côté serveur
+          notificationsPromise.catch(error => {
+            console.log('Erreur notifications (non-bloquante):', error);
+          });
 
         } catch (error) {
           console.error('Erreur lors du chargement des abonnements:', error);

@@ -5,8 +5,6 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var cors = require('cors');
 var mongoose = require('mongoose');
-const cron = require('node-cron');
-const { checkUpcomingSubscriptions } = require('./services/notificationService');
 const { initCronJobs } = require('./services/cronService');
 require('./models/connection');
 
@@ -45,23 +43,9 @@ mongoose.connect(process.env.CONNECTION_STRING, {
   .then(() => {
     console.log('Connecté à MongoDB avec succès');
     
-    // Initialize all cron jobs
+    // Initialize all cron jobs (includes 9am notification check)
     console.log('Initialisation des cron jobs...');
     initCronJobs();
-    
-    // Configuration du cron job pour vérifier les abonnements tous les jours à 9h
-    cron.schedule('0 9 * * *', async () => {
-      console.log('Exécution de la vérification des abonnements...');
-      try {
-        await checkUpcomingSubscriptions();
-        console.log('Vérification des abonnements terminée');
-      } catch (error) {
-        console.error('Erreur lors de la vérification des abonnements:', error);
-      }
-    }, {
-      scheduled: true,
-      timezone: "Europe/Paris"
-    });
   })
   .catch(err => console.error('Erreur de connexion à MongoDB:', err));
 

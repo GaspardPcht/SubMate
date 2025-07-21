@@ -281,23 +281,41 @@ export const registerForPushNotifications = async (userId: string) => {
     console.log('Token push obtenu:', pushToken.data);
 
     try {
+      const userToken = await AsyncStorage.getItem('userToken');
+      console.log('Envoi du push token au serveur...', {
+        apiUrl: API_URL,
+        hasUserToken: !!userToken,
+        pushTokenLength: pushToken.data.length
+      });
+
       const res = await fetch(`${API_URL}/notifications/register-push-token`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${await AsyncStorage.getItem('userToken')}`
+          'Authorization': `Bearer ${userToken}`
         },
         body: JSON.stringify({
           pushToken: pushToken.data
         })
-      })
-      const data = await res.json()
-      console.log('Token enregistré sur le serveur:', data)
-      return pushToken.data
+      });
+
+      const data = await res.json();
+      console.log('Réponse du serveur pour push token:', {
+        status: res.status,
+        data
+      });
+
+      if (res.ok) {
+        console.log('✅ Push token enregistré avec succès sur le serveur');
+      } else {
+        console.error('❌ Échec de l\'enregistrement du push token:', data);
+      }
+      
+      return pushToken.data;
     } catch (error) {
-      console.log('Erreur lors de l\'enregistrement du token (non-bloquante):', error)
+      console.error('Erreur lors de l\'enregistrement du token:', error);
       // Retourner le token même si l'enregistrement serveur échoue
-      return pushToken.data
+      return pushToken.data;
     }
   } catch (error) {
     console.error('Erreur lors de l\'enregistrement pour les notifications:', error);

@@ -2,19 +2,25 @@ const express = require('express');
 const router = express.Router();
 const User = require('../models/user');
 
-// Récupérer tous les abonnements d'un utilisateur
+// Récupérer tous les abonnements d'un utilisateur (optimisé)
 router.get('/user/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
     console.log('Recherche des abonnements pour l\'utilisateur:', userId);
     
-    const user = await User.findById(userId);
+    // Utilisation de select pour ne récupérer que les champs nécessaires
+    const user = await User.findById(userId, 'subscriptions').lean();
     if (!user) {
       return res.json({ result: false, error: 'Utilisateur non trouvé' });
     }
 
-    console.log('Abonnements trouvés:', user.subscriptions);
-    res.json({ result: true, subs: user.subscriptions });
+    // Tri des abonnements par date de prochaine facturation (côté serveur)
+    const sortedSubscriptions = user.subscriptions.sort((a, b) => {
+      return new Date(a.nextBillingDate).getTime() - new Date(b.nextBillingDate).getTime();
+    });
+
+    console.log('Abonnements trouvés et triés:', sortedSubscriptions.length);
+    res.json({ result: true, subs: sortedSubscriptions });
   } catch (error) {
     console.error('Erreur lors de la récupération des abonnements:', error);
     res.json({ result: false, error: 'Erreur lors de la récupération des abonnements' });

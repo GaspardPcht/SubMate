@@ -100,4 +100,37 @@ router.post('/send-test-notification', async (req, res) => {
   }
 });
 
+// Route pour vérifier l'état des push tokens
+router.get('/tokens-status', async (req, res) => {
+  try {
+    const users = await User.find({}, 'email pushToken subscriptions.name subscriptions.nextBillingDate');
+    
+    const tokensStatus = users.map(user => ({
+      userId: user._id,
+      email: user.email,
+      hasPushToken: !!user.pushToken,
+      tokenPreview: user.pushToken ? user.pushToken.substring(0, 20) + '...' : null,
+      subscriptionsCount: user.subscriptions.length,
+      subscriptions: user.subscriptions.map(sub => ({
+        name: sub.name,
+        nextBillingDate: sub.nextBillingDate
+      }))
+    }));
+
+    res.json({
+      success: true,
+      totalUsers: users.length,
+      usersWithTokens: tokensStatus.filter(u => u.hasPushToken).length,
+      users: tokensStatus
+    });
+  } catch (error) {
+    console.error('Erreur lors de la vérification des tokens:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Erreur lors de la vérification des tokens',
+      details: error.message 
+    });
+  }
+});
+
 module.exports = router;
